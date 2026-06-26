@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1782399625393,
+      "tag": "0000_fuzzy_mariko_yashida",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1782400303488,
+      "tag": "0001_serious_dreadnoughts",
+      "breakpoints": true
+    }
+  ]
+}
