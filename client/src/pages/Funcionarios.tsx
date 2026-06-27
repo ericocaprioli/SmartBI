@@ -7,9 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 
 export default function Funcionarios() {
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [formData, setFormData] = useState({
     nome: "",
     funcao: "",
@@ -21,6 +23,7 @@ export default function Funcionarios() {
 
   const { data: funcionarios, refetch } = trpc.funcionarios.list.useQuery();
   const createMutation = trpc.funcionarios.create.useMutation();
+  const importMutation = trpc.funcionarios.importCSV.useMutation();
 
   const handleSubmit = async () => {
     if (!formData.nome || !formData.funcao || formData.salario_base <= 0) {
@@ -46,6 +49,27 @@ export default function Funcionarios() {
     }
   };
 
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const csvContent = event.target?.result as string;
+      try {
+        const result = await importMutation.mutateAsync({ csvContent });
+        const successCount = result.filter((r: any) => r.success).length;
+        const failCount = result.filter((r: any) => !r.success).length;
+        toast.success(`Importação concluída: ${successCount} registros importados, ${failCount} erros`);
+        setImportOpen(false);
+        refetch();
+      } catch (error) {
+        toast.error("Erro ao importar CSV");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
@@ -55,10 +79,46 @@ export default function Funcionarios() {
             <h1 className="text-3xl font-bold text-white mb-2">CADASTRO DE FUNCIONÁRIOS</h1>
             <p className="text-muted-foreground dimension-marker">Gerenciamento de dados cadastrais</p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="cad-button">+ NOVO FUNCIONÁRIO</Button>
-            </DialogTrigger>
+          <div className="flex gap-4">
+            <Dialog open={importOpen} onOpenChange={setImportOpen}>
+              <DialogTrigger asChild>
+                <Button className="cad-button" variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  IMPORTAR CSV
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-2 border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-white">IMPORTAR CSV</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm dimension-marker">ARQUIVO CSV</label>
+                    <Input
+                      className="cad-input mt-1"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleImportCSV}
+                      disabled={importMutation.isPending}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O CSV deve conter as colunas: nome, funcao, setor, salario_base, data_admissao, situacao, ativo
+                  </p>
+                  <Button
+                    className="cad-button w-full mt-2"
+                    variant="outline"
+                    onClick={() => window.open('/csv-templates/funcionarios_template.csv', '_blank')}
+                  >
+                    BAIXAR TEMPLATE
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="cad-button">+ NOVO FUNCIONÁRIO</Button>
+              </DialogTrigger>
             <DialogContent className="bg-card border-2 border-border">
               <DialogHeader>
                 <DialogTitle className="text-white">NOVO FUNCIONÁRIO</DialogTitle>
@@ -124,6 +184,7 @@ export default function Funcionarios() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Tabela de Funcionários */}

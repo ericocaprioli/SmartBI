@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 
 const MESES = [
   { value: "2026-01", label: "Janeiro 2026" },
@@ -19,6 +20,7 @@ const MESES = [
 export default function Producao() {
   const [mesSelecionado, setMesSelecionado] = useState("2026-06");
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [formData, setFormData] = useState({
     funcionario_id: 0,
     mes_referencia: mesSelecionado,
@@ -31,6 +33,7 @@ export default function Producao() {
   const { data: producao, refetch } = trpc.producao.listByMes.useQuery(mesSelecionado);
   const { data: funcionarios } = trpc.funcionarios.list.useQuery();
   const createMutation = trpc.producao.create.useMutation();
+  const importMutation = trpc.producao.importCSV.useMutation();
 
   const handleSubmit = async () => {
     if (formData.funcionario_id <= 0 || formData.meta_dia <= 0 || formData.valor_peca <= 0) {
@@ -65,6 +68,27 @@ export default function Producao() {
     }
   };
 
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const csvContent = event.target?.result as string;
+      try {
+        const result = await importMutation.mutateAsync({ csvContent });
+        const successCount = result.filter((r: any) => r.success).length;
+        const failCount = result.filter((r: any) => !r.success).length;
+        toast.success(`Importação concluída: ${successCount} registros importados, ${failCount} erros`);
+        setImportOpen(false);
+        refetch();
+      } catch (error) {
+        toast.error("Erro ao importar CSV");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const getFuncionarioNome = (id: number) => {
     return funcionarios?.find((f) => f.id === id)?.nome || `Funcionário ${id}`;
   };
@@ -91,6 +115,41 @@ export default function Producao() {
                 ))}
               </SelectContent>
             </Select>
+            <Dialog open={importOpen} onOpenChange={setImportOpen}>
+              <DialogTrigger asChild>
+                <Button className="cad-button" variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  IMPORTAR CSV
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-2 border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-white">IMPORTAR CSV</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm dimension-marker">ARQUIVO CSV</label>
+                    <Input
+                      className="cad-input mt-1"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleImportCSV}
+                      disabled={importMutation.isPending}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O CSV deve conter as colunas: funcionario_id, mes_referencia, meta_dia, meta_mes, valor_peca, producao_realizada, faturamento_mensal
+                  </p>
+                  <Button
+                    className="cad-button w-full mt-2"
+                    variant="outline"
+                    onClick={() => window.open('/csv-templates/producao_template.csv', '_blank')}
+                  >
+                    BAIXAR TEMPLATE
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button className="cad-button">+ REGISTRAR PRODUÇÃO</Button>

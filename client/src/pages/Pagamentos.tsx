@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import DashboardLayout from "@/components/DashboardLayout";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 
 const MESES = [
   { value: "2026-01", label: "Janeiro 2026" },
@@ -19,6 +20,7 @@ const MESES = [
 export default function Pagamentos() {
   const [mesSelecionado, setMesSelecionado] = useState("2026-06");
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [formData, setFormData] = useState({
     funcionario_id: 0,
     mes_referencia: mesSelecionado,
@@ -40,6 +42,7 @@ export default function Pagamentos() {
   const { data: pagamentos, refetch } = trpc.pagamentos.listByMes.useQuery(mesSelecionado);
   const { data: funcionarios } = trpc.funcionarios.list.useQuery();
   const createMutation = trpc.pagamentos.create.useMutation();
+  const importMutation = trpc.pagamentos.importCSV.useMutation();
 
   const handleSubmit = async () => {
     if (formData.funcionario_id <= 0 || formData.dias_trabalhados <= 0) {
@@ -90,6 +93,27 @@ export default function Pagamentos() {
     }
   };
 
+  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const csvContent = event.target?.result as string;
+      try {
+        const result = await importMutation.mutateAsync({ csvContent });
+        const successCount = result.filter((r: any) => r.success).length;
+        const failCount = result.filter((r: any) => !r.success).length;
+        toast.success(`Importação concluída: ${successCount} registros importados, ${failCount} erros`);
+        setImportOpen(false);
+        refetch();
+      } catch (error) {
+        toast.error("Erro ao importar CSV");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
@@ -115,6 +139,41 @@ export default function Pagamentos() {
                 ))}
               </SelectContent>
             </Select>
+            <Dialog open={importOpen} onOpenChange={setImportOpen}>
+              <DialogTrigger asChild>
+                <Button className="cad-button" variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  IMPORTAR CSV
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-2 border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-white">IMPORTAR CSV</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm dimension-marker">ARQUIVO CSV</label>
+                    <Input
+                      className="cad-input mt-1"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleImportCSV}
+                      disabled={importMutation.isPending}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    O CSV deve conter as colunas: funcionario_id, mes_referencia, dias_trabalhados, salario_base_mes, valor_dia, salario_bruto, salario_familia, premio_producao, premio_assiduidade, hora_extra, inss, desconto_diversos, salario_liquido, ferias, terco_ferias, decimo_terceiro
+                  </p>
+                  <Button
+                    className="cad-button w-full mt-2"
+                    variant="outline"
+                    onClick={() => window.open('/csv-templates/pagamentos_template.csv', '_blank')}
+                  >
+                    BAIXAR TEMPLATE
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button className="cad-button">+ REGISTRAR PAGAMENTO</Button>

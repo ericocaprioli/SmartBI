@@ -148,6 +148,11 @@ export const appRouter = router({
         const { id, ...data } = input;
         return await updatePagamento(id, data);
       }),
+    importCSV: publicProcedure
+      .input(z.object({ csvContent: z.string() }))
+      .mutation(async ({ input }) => {
+        return await importPagamentosCSV(input.csvContent);
+      }),
   }),
 
   producao: router({
@@ -198,6 +203,11 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
         return await updateProducao(id, data);
+      }),
+    importCSV: publicProcedure
+      .input(z.object({ csvContent: z.string() }))
+      .mutation(async ({ input }) => {
+        return await importProducaoCSV(input.csvContent);
       }),
   }),
 
