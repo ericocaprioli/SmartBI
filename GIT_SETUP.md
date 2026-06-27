@@ -23,3 +23,15 @@ git push -u origin main
 ```
 
 Se quiser que eu tente executar comandos aqui, instale/permita `git` e `gh` no ambiente onde este agente roda.
+
+## GitHub Pages
+
+Este projeto já tem um workflow de GitHub Pages em `.github/workflows/pages.yml`.
+Ele usa `pnpm build` e publica o conteúdo gerado em `dist/public`.
+
+Após commitar e push das mudanças, o Pages será publicado automaticamente a partir da branch `main`.
+O site deve ficar disponível em:
+
+`https://ericocaprioli.github.io/SmartBI/`
+
+Se quiser, adicione também um `CNAME` na configuração do repo para um domínio personalizado.

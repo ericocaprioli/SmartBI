@@ -19,17 +19,22 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, isAuthConfigured } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Factory, BarChart3, CalendarDays } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+  { icon: Users, label: "Funcionários", path: "/funcionarios" },
+  { icon: DollarSign, label: "Pagamentos", path: "/pagamentos" },
+  { icon: Factory, label: "Produção", path: "/producao" },
+  { icon: BarChart3, label: "Dashboard Produção", path: "/dashboard-producao" },
+  { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
+  { icon: CalendarDays, label: "Visão Anual", path: "/visao-anual" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -37,26 +42,38 @@ const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
 
+// DashboardLayout é o wrapper principal da página que fornece:
+// - controle de autenticação
+// - redimensionamento e colapso da sidebar
+// - fallback em modo convidado quando a autenticação não está configurada
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // A largura da sidebar é persistida no localStorage para manter a preferência do usuário.
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
-  const { loading, user } = useAuth();
 
+  // Estado de autenticação usado pelo layout.
+  const { loading, user } = useAuth();
+  const authConfigured = isAuthConfigured();
+  const loginUrl = getLoginUrl();
+
+  // Persiste a largura atual da sidebar sempre que ela muda.
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
 
   if (loading) {
+    // Exibe um esqueleto enquanto o estado de autenticação ainda está carregando.
     return <DashboardLayoutSkeleton />
   }
 
-  if (!user) {
+  if (!user && authConfigured) {
+    // Se a autenticação está configurada e não há usuário logado, força o fluxo de login.
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
@@ -70,7 +87,7 @@ export default function DashboardLayout({
           </div>
           <Button
             onClick={() => {
-              window.location.href = getLoginUrl();
+              window.location.href = loginUrl;
             }}
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
@@ -82,6 +99,32 @@ export default function DashboardLayout({
     );
   }
 
+  if (!user && !authConfigured) {
+    // A autenticação não está configurada, mas ainda assim renderizamos a UI em modo convidado.
+    // Isso fornece um shell de dashboard utilizável sem exigir login.
+    return (
+      <SidebarProvider
+        style={
+          {
+            "--sidebar-width": `${sidebarWidth}px`,
+          } as CSSProperties
+        }
+      >
+        <div className="min-h-screen flex-1 min-w-0">
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 p-6">
+            <h2 className="text-xl font-semibold">Guest mode enabled</h2>
+            <p className="mt-2 text-sm">
+              Authentication is not configured. You can still explore the dashboard UI, but some API data may be unavailable.
+            </p>
+          </div>
+          <DashboardLayoutContent setSidebarWidth={setSidebarWidth} sidebarWidth={sidebarWidth}>
+            {children}
+          </DashboardLayoutContent>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   return (
     <SidebarProvider
       style={
@@ -90,31 +133,45 @@ export default function DashboardLayout({
         } as CSSProperties
       }
     >
-      <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
+      <DashboardLayoutContent setSidebarWidth={setSidebarWidth} sidebarWidth={sidebarWidth}>
         {children}
       </DashboardLayoutContent>
     </SidebarProvider>
   );
 }
 
+// Wrapper interno de conteúdo renderizado após as condições de autenticação serem resolvidas.
+// Este componente contém a sidebar, navegação, menu do usuário e a área principal.
 type DashboardLayoutContentProps = {
   children: React.ReactNode;
   setSidebarWidth: (width: number) => void;
+  sidebarWidth: number;
 };
 
 function DashboardLayoutContent({
   children,
   setSidebarWidth,
+  sidebarWidth,
 }: DashboardLayoutContentProps) {
+  // Estado de autenticação para o menu de usuário da sidebar.
   const { user, logout } = useAuth();
+
+  // Integração com o roteador Wouter.
   const [location, setLocation] = useLocation();
+
+  // Estado da sidebar proveniente do provider personalizado.
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
+
+  // Estado de redimensionamento da sidebar via mouse.
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Determina a página ativa para destacar o menu correto.
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
 
+  // Se a sidebar colapsar durante o arraste, encerra o redimensionamento.
   useEffect(() => {
     if (isCollapsed) {
       setIsResizing(false);
@@ -122,6 +179,7 @@ function DashboardLayoutContent({
   }, [isCollapsed]);
 
   useEffect(() => {
+    // Adiciona eventos de mouse apenas enquanto a sidebar estiver sendo redimensionada.
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
 
@@ -133,6 +191,7 @@ function DashboardLayoutContent({
     };
 
     const handleMouseUp = () => {
+      // Encerra o modo de redimensionamento quando o mouse é solto.
       setIsResizing(false);
     };
 
@@ -151,15 +210,15 @@ function DashboardLayoutContent({
     };
   }, [isResizing, setSidebarWidth]);
 
+  // Renderiza o shell do dashboard com sidebar, menu e painel principal.
   return (
-    <>
-      <div className="relative" ref={sidebarRef}>
-        <Sidebar
-          collapsible="icon"
-          className="border-r-0"
-          disableTransition={isResizing}
-        >
-          <SidebarHeader className="h-16 justify-center">
+    <div className="relative flex min-h-screen" ref={sidebarRef}>
+      <Sidebar
+        collapsible="icon"
+        className="border-r-0"
+        disableTransition={isResizing}
+      >
+        <SidebarHeader className="h-16 justify-center">
             <div className="flex items-center gap-3 px-2 transition-all w-full">
               <button
                 onClick={toggleSidebar}
@@ -177,6 +236,20 @@ function DashboardLayoutContent({
               ) : null}
             </div>
           </SidebarHeader>
+
+          {!isCollapsed ? (
+            <div className="px-3 pb-2">
+              <Button
+                variant={location === "/dashboard-producao" ? "secondary" : "outline"}
+                size="sm"
+                className="w-full justify-start gap-2"
+                onClick={() => setLocation("/dashboard-producao")}
+              >
+                <BarChart3 className="h-4 w-4" />
+                Dashboard Produção
+              </Button>
+            </div>
+          ) : null}
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
@@ -232,6 +305,7 @@ function DashboardLayoutContent({
             </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
+        {/* Alça de redimensionamento: inicia o modo de redimensionamento com o mouse */}
         <div
           className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
           onMouseDown={() => {
@@ -240,25 +314,24 @@ function DashboardLayoutContent({
           }}
           style={{ zIndex: 50 }}
         />
-      </div>
 
-      <SidebarInset>
-        {isMobile && (
-          <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
-                  <span className="tracking-tight text-foreground">
-                    {activeMenuItem?.label ?? "Menu"}
-                  </span>
+        <SidebarInset className="flex-1 min-w-0">
+          {isMobile && (
+            <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="tracking-tight text-foreground">
+                      {activeMenuItem?.label ?? "Menu"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        <main className="flex-1 p-4">{children}</main>
-      </SidebarInset>
-    </>
+          )}
+          <div className="flex-1 p-4">{children}</div>
+        </SidebarInset>
+    </div>
   );
 }

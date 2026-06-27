@@ -24,12 +24,17 @@ export default function Pagamentos() {
     mes_referencia: mesSelecionado,
     dias_trabalhados: 0,
     salario_base_mes: 0,
+    valor_dia: 0,
+    salario_bruto: 0,
     salario_familia: 0,
     premio_producao: 0,
     premio_assiduidade: 0,
     hora_extra: 0,
     inss: 0,
     desconto_diversos: 0,
+    ferias: 0,
+    terco_ferias: 0,
+    decimo_terceiro: 0,
   });
 
   const { data: pagamentos, refetch } = trpc.pagamentos.listByMes.useQuery(mesSelecionado);
@@ -44,10 +49,10 @@ export default function Pagamentos() {
 
     try {
       const funcionario = funcionarios?.find((f) => f.id === formData.funcionario_id);
-      const salarioBaseMes = (funcionario?.salario_base || 0);
+      const salarioBaseMes = funcionario?.salario_base || 0;
       const valorDia = Math.round(salarioBaseMes / 30);
       const salarioBruto = valorDia * formData.dias_trabalhados;
-      const totalProventos = salarioBruto + formData.salario_familia + formData.premio_producao + formData.premio_assiduidade + formData.hora_extra;
+      const totalProventos = salarioBruto + formData.salario_familia + formData.premio_producao + formData.premio_assiduidade + formData.hora_extra + formData.ferias + formData.terco_ferias + formData.decimo_terceiro;
       const totalDescontos = formData.inss + formData.desconto_diversos;
       const salarioLiquido = totalProventos - totalDescontos;
 
@@ -66,12 +71,17 @@ export default function Pagamentos() {
         mes_referencia: mesSelecionado,
         dias_trabalhados: 0,
         salario_base_mes: 0,
+        valor_dia: 0,
+        salario_bruto: 0,
         salario_familia: 0,
         premio_producao: 0,
         premio_assiduidade: 0,
         hora_extra: 0,
         inss: 0,
         desconto_diversos: 0,
+        ferias: 0,
+        terco_ferias: 0,
+        decimo_terceiro: 0,
       });
       setOpen(false);
       refetch();
@@ -90,7 +100,10 @@ export default function Pagamentos() {
             <p className="text-muted-foreground dimension-marker">Registro mensal de pagamentos</p>
           </div>
           <div className="flex gap-4">
-            <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
+            <Select value={mesSelecionado} onValueChange={(value) => {
+              setMesSelecionado(value);
+              setFormData((prev) => ({ ...prev, mes_referencia: value }));
+            }}>
               <SelectTrigger className="w-48 cad-input">
                 <SelectValue />
               </SelectTrigger>
@@ -176,6 +189,36 @@ export default function Pagamentos() {
                     />
                   </div>
                   <div>
+                    <label className="text-sm dimension-marker">FERÍAS (R$)</label>
+                    <Input
+                      className="cad-input mt-1"
+                      type="number"
+                      step="0.01"
+                      value={formData.ferias / 100}
+                      onChange={(e) => setFormData({ ...formData, ferias: Math.round(parseFloat(e.target.value) * 100) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm dimension-marker">1/3 FERÍAS (R$)</label>
+                    <Input
+                      className="cad-input mt-1"
+                      type="number"
+                      step="0.01"
+                      value={formData.terco_ferias / 100}
+                      onChange={(e) => setFormData({ ...formData, terco_ferias: Math.round(parseFloat(e.target.value) * 100) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm dimension-marker">13º SALÁRIO (R$)</label>
+                    <Input
+                      className="cad-input mt-1"
+                      type="number"
+                      step="0.01"
+                      value={formData.decimo_terceiro / 100}
+                      onChange={(e) => setFormData({ ...formData, decimo_terceiro: Math.round(parseFloat(e.target.value) * 100) })}
+                    />
+                  </div>
+                  <div>
                     <label className="text-sm dimension-marker">INSS (R$)</label>
                     <Input
                       className="cad-input mt-1"
@@ -209,11 +252,22 @@ export default function Pagamentos() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-border">
+                <th className="text-left p-3 dimension-marker">MÊS REFERÊNCIA</th>
                 <th className="text-left p-3 dimension-marker">FUNCIONÁRIO</th>
-                <th className="text-left p-3 dimension-marker">DIAS</th>
-                <th className="text-left p-3 dimension-marker">SALÁRIO BRUTO</th>
-                <th className="text-left p-3 dimension-marker">DESCONTOS</th>
+                <th className="text-left p-3 dimension-marker">SALÁRIO BASE</th>
+                <th className="text-left p-3 dimension-marker">VALOR R$ DIA</th>
+                <th className="text-left p-3 dimension-marker">DIAS TRABALHADOS</th>
+                <th className="text-left p-3 dimension-marker">SALÁRIO</th>
+                <th className="text-left p-3 dimension-marker">SALÁRIO FAMÍLIA</th>
+                <th className="text-left p-3 dimension-marker">PRÊMIO PRODUÇÃO</th>
+                <th className="text-left p-3 dimension-marker">ASSIDUIDADE</th>
+                <th className="text-left p-3 dimension-marker">HORA EXTRA</th>
+                <th className="text-left p-3 dimension-marker">INSS</th>
+                <th className="text-left p-3 dimension-marker">DESCONTO</th>
                 <th className="text-left p-3 dimension-marker">SALÁRIO LÍQUIDO</th>
+                <th className="text-left p-3 dimension-marker">FÉRIAS</th>
+                <th className="text-left p-3 dimension-marker">1/3 FÉRIAS</th>
+                <th className="text-left p-3 dimension-marker">13º SALÁRIO</th>
               </tr>
             </thead>
             <tbody>
@@ -222,11 +276,22 @@ export default function Pagamentos() {
                 const descontos = (p.inss || 0) + (p.desconto_diversos || 0);
                 return (
                   <tr key={p.id} className="border-b border-border hover:bg-accent/10">
+                    <td className="p-3 text-white">{p.mes_referencia}</td>
                     <td className="p-3 text-white">{funcionario?.nome || `Funcionário ${p.funcionario_id}`}</td>
+                    <td className="p-3 text-white">R$ {(p.salario_base_mes / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.valor_dia / 100).toFixed(2)}</td>
                     <td className="p-3 text-white">{p.dias_trabalhados || 0}</td>
                     <td className="p-3 text-white">R$ {(p.salario_bruto / 100).toFixed(2)}</td>
-                    <td className="p-3 text-white">R$ {(descontos / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.salario_familia / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.premio_producao / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.premio_assiduidade / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.hora_extra / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.inss / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(((p.inss || 0) + (p.desconto_diversos || 0)) / 100).toFixed(2)}</td>
                     <td className="p-3 text-white">R$ {(p.salario_liquido / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.ferias / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.terco_ferias / 100).toFixed(2)}</td>
+                    <td className="p-3 text-white">R$ {(p.decimo_terceiro / 100).toFixed(2)}</td>
                   </tr>
                 );
               })}

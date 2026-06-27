@@ -1,7 +1,7 @@
 /**
- * GOOGLE MAPS FRONTEND INTEGRATION - ESSENTIAL GUIDE
+ * INTEGRAÇÃO GOOGLE MAPS NO FRONTEND - GUIA ESSENCIAL
  *
- * USAGE FROM PARENT COMPONENT:
+ * USO PELO COMPONENTE PAI:
  * ======
  *
  * const mapRef = useRef<google.maps.Map | null>(null);
@@ -10,14 +10,14 @@
  *   initialCenter={{ lat: 40.7128, lng: -74.0060 }}
  *   initialZoom={15}
  *   onMapReady={(map) => {
- *     mapRef.current = map; // Store to control map from parent anytime, google map itself is in charge of the re-rendering, not react state.
+ *     mapRef.current = map; // Armazena para controlar o mapa a partir do componente pai; o Google Maps gerencia a renderização.
  * </MapView>
  *
  * ======
- * Available Libraries and Core Features:
+ * Bibliotecas disponíveis e funcionalidades principais:
  * -------------------------------
- * 📍 MARKER (from `marker` library)
- * - Attaches to map using { map, position }
+ * 📍 MARKER (biblioteca `marker`)
+ * - Anexa ao mapa usando { map, position }
  * new google.maps.marker.AdvancedMarkerElement({
  *   map,
  *   position: { lat: 37.7749, lng: -122.4194 },
@@ -25,16 +25,16 @@
  * });
  *
  * -------------------------------
- * 🏢 PLACES (from `places` library)
- * - Does not attach directly to map; use data with your map manually.
+ * 🏢 PLACES (biblioteca `places`)
+ * - Não anexa diretamente ao mapa; use os dados manualmente no mapa.
  * const place = new google.maps.places.Place({ id: PLACE_ID });
  * await place.fetchFields({ fields: ["displayName", "location"] });
  * map.setCenter(place.location);
  * new google.maps.marker.AdvancedMarkerElement({ map, position: place.location });
  *
  * -------------------------------
- * 🧭 GEOCODER (from `geocoding` library)
- * - Standalone service; manually apply results to map.
+ * 🧭 GEOCODER (biblioteca `geocoding`)
+ * - Serviço independente; aplique os resultados manualmente ao mapa.
  * const geocoder = new google.maps.Geocoder();
  * geocoder.geocode({ address: "New York" }, (results, status) => {
  *   if (status === "OK" && results[0]) {
@@ -47,13 +47,13 @@
  * });
  *
  * -------------------------------
- * 📐 GEOMETRY (from `geometry` library)
- * - Pure utility functions; not attached to map.
+ * 📐 GEOMETRIA (biblioteca `geometry`)
+ * - Funções utilitárias puras; não são anexadas ao mapa.
  * const dist = google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
  *
  * -------------------------------
- * 🛣️ ROUTES (from `routes` library)
- * - Combines DirectionsService (standalone) + DirectionsRenderer (map-attached)
+ * 🛣️ ROTAS (biblioteca `routes`)
+ * - Combina DirectionsService (independente) + DirectionsRenderer (anexado ao mapa)
  * const directionsService = new google.maps.DirectionsService();
  * const directionsRenderer = new google.maps.DirectionsRenderer({ map });
  * directionsService.route(
@@ -62,16 +62,16 @@
  * );
  *
  * -------------------------------
- * 🌦️ MAP LAYERS (attach directly to map)
+ * 🌦️ CAMADAS DO MAPA (anexa diretamente ao mapa)
  * - new google.maps.TrafficLayer().setMap(map);
  * - new google.maps.TransitLayer().setMap(map);
  * - new google.maps.BicyclingLayer().setMap(map);
  *
  * -------------------------------
  * ✅ SUMMARY
- * - “map-attached” → AdvancedMarkerElement, DirectionsRenderer, Layers.
- * - “standalone” → Geocoder, DirectionsService, DistanceMatrixService, ElevationService.
- * - “data-only” → Place, Geometry utilities.
+ * - “anexado ao mapa” → AdvancedMarkerElement, DirectionsRenderer, Layers.
+ * - “independente” → Geocoder, DirectionsService, DistanceMatrixService, ElevationService.
+ * - “apenas dados” → Place, utilitários de Geometry.
  */
 
 /// <reference types="@types/google.maps" />
@@ -92,6 +92,8 @@ const FORGE_BASE_URL =
   "https://forge.butterfly-effect.dev";
 const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
 
+// Carrega dinamicamente o script do Google Maps via proxy Forge.
+// O script é removido do DOM após o carregamento para manter o documento limpo.
 function loadMapScript() {
   return new Promise(resolve => {
     const script = document.createElement("script");
@@ -100,7 +102,7 @@ function loadMapScript() {
     script.crossOrigin = "anonymous";
     script.onload = () => {
       resolve(null);
-      script.remove(); // Clean up immediately
+      script.remove(); // Remove imediatamente para manter o DOM limpo
     };
     script.onerror = () => {
       console.error("Failed to load Google Maps script");
@@ -125,6 +127,7 @@ export function MapView({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
 
+  // Inicializa o mapa apenas uma vez, preservando a referência de container e do mapa.
   const init = usePersistFn(async () => {
     await loadMapScript();
     if (!mapContainer.current) {

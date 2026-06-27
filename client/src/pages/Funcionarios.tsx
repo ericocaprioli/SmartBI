@@ -135,6 +135,7 @@ export default function Funcionarios() {
                 <th className="text-left p-3 dimension-marker">FUNÇÃO</th>
                 <th className="text-left p-3 dimension-marker">SITUAÇÃO</th>
                 <th className="text-left p-3 dimension-marker">FORMA PGTO</th>
+                <th className="text-left p-3 dimension-marker">PIX</th>
                 <th className="text-left p-3 dimension-marker">SALÁRIO BASE</th>
               </tr>
             </thead>
@@ -145,6 +146,7 @@ export default function Funcionarios() {
                   <td className="p-3 text-white">{f.funcao}</td>
                   <td className="p-3 text-white">{f.situacao}</td>
                   <td className="p-3 text-white">{f.forma_pagamento}</td>
+                  <td className="p-3 text-white">{f.pix ?? "-"}</td>
                   <td className="p-3 text-white">R$ {(f.salario_base / 100).toFixed(2)}</td>
                 </tr>
               ))}

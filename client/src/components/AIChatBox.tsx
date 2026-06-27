@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { Streamdown } from "streamdown";
 
 /**
- * Message type matching server-side LLM Message interface
+ * Tipo de mensagem compatível com a interface de mensagens LLM no servidor.
  */
 export type Message = {
   role: "system" | "user" | "assistant";
@@ -16,77 +16,75 @@ export type Message = {
 
 export type AIChatBoxProps = {
   /**
-   * Messages array to display in the chat.
-   * Should match the format used by invokeLLM on the server.
+   * Vetor de mensagens para exibir no chat.
+   * Deve corresponder ao formato usado pelo invokeLLM no servidor.
    */
   messages: Message[];
 
   /**
-   * Callback when user sends a message.
-   * Typically you'll call a tRPC mutation here to invoke the LLM.
+   * Callback acionado quando o usuário envia uma mensagem.
+   * Normalmente, aqui você chamará uma mutação tRPC para invocar o LLM.
    */
   onSendMessage: (content: string) => void;
 
   /**
-   * Whether the AI is currently generating a response
+   * Indica se a IA está gerando resposta.
    */
   isLoading?: boolean;
 
   /**
-   * Placeholder text for the input field
+   * Texto de placeholder para o campo de entrada.
    */
   placeholder?: string;
 
   /**
-   * Custom className for the container
+   * Classe CSS personalizada para o container.
    */
   className?: string;
 
   /**
-   * Height of the chat box (default: 600px)
+   * Altura do chat box (padrão: 600px).
    */
   height?: string | number;
 
   /**
-   * Empty state message to display when no messages
+   * Texto exibido quando não há mensagens.
    */
   emptyStateMessage?: string;
 
   /**
-   * Suggested prompts to display in empty state
-   * Click to send directly
+   * Sugestões de prompt exibidas no estado vazio.
+   * Clique para enviar diretamente.
    */
   suggestedPrompts?: string[];
 };
 
 /**
- * A ready-to-use AI chat box component that integrates with the LLM system.
+ * Componente de chat com IA pronto para uso e integrado ao sistema LLM.
  *
- * Features:
- * - Matches server-side Message interface for seamless integration
- * - Markdown rendering with Streamdown
- * - Auto-scrolls to latest message
- * - Loading states
- * - Uses global theme colors from index.css
+ * Funcionalidades:
+ * - Compatível com a interface de mensagens do servidor
+ * - Renderização Markdown com Streamdown
+ * - Rolagem automática para a última mensagem
+ * - Estados de carregamento
+ * - Usa as cores de tema globais de index.css
  *
  * @example
  * ```tsx
  * const ChatPage = () => {
  *   const [messages, setMessages] = useState<Message[]>([
- *     { role: "system", content: "You are a helpful assistant." }
+ *     { role: "system", content: "Você é um assistente útil." }
  *   ]);
  *
  *   const chatMutation = trpc.ai.chat.useMutation({
  *     onSuccess: (response) => {
- *       // Assuming your tRPC endpoint returns the AI response as a string
  *       setMessages(prev => [...prev, {
  *         role: "assistant",
  *         content: response
  *       }]);
  *     },
  *     onError: (error) => {
- *       console.error("Chat error:", error);
- *       // Optionally show error message to user
+ *       console.error("Erro no chat:", error);
  *     }
  *   });
  *
@@ -102,8 +100,8 @@ export type AIChatBoxProps = {
  *       onSendMessage={handleSend}
  *       isLoading={chatMutation.isPending}
  *       suggestedPrompts={[
- *         "Explain quantum computing",
- *         "Write a hello world in Python"
+ *         "Explique computação quântica",
+ *         "Escreva um hello world em Python"
  *       ]}
  *     />
  *   );
@@ -120,16 +118,20 @@ export function AIChatBox({
   emptyStateMessage = "Start a conversation with AI",
   suggestedPrompts,
 }: AIChatBoxProps) {
+  // Estado local do texto digitado pelo usuário.
   const [input, setInput] = useState("");
+
+  // Referências para controle de rolagem e medição de layout.
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputAreaRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Filter out system messages
+  // Filtra as mensagens de sistema para que não apareçam no histórico visível.
   const displayMessages = messages.filter((msg) => msg.role !== "system");
 
-  // Calculate min-height for last assistant message to push user message to top
+  // Reserva altura para a última mensagem do assistente.
+  // Evita que a área de entrada sobreponha o conteúdo mais recente.
   const [minHeightForLastMessage, setMinHeightForLastMessage] = useState(0);
 
   useEffect(() => {
@@ -138,10 +140,10 @@ export function AIChatBox({
       const inputHeight = inputAreaRef.current.offsetHeight;
       const scrollAreaHeight = containerHeight - inputHeight;
 
-      // Reserve space for:
-      // - padding (p-4 = 32px top+bottom)
-      // - user message: 40px (item height) + 16px (margin-top from space-y-4) = 56px
-      // Note: margin-bottom is not counted because it naturally pushes the assistant message down
+      // Reserva espaço para:
+      // - padding (p-4 = 32px total de cima e baixo)
+      // - mensagem do usuário: 40px (altura) + 16px (margem superior de space-y-4) = 56px
+      // Observação: margin-bottom não é contado porque empurra naturalmente a mensagem do assistente para baixo
       const userMessageReservedHeight = 56;
       const calculatedHeight = scrollAreaHeight - 32 - userMessageReservedHeight;
 
@@ -149,7 +151,8 @@ export function AIChatBox({
     }
   }, []);
 
-  // Scroll to bottom helper function with smooth animation
+  // Função auxiliar que rola o chat para a mensagem mais recente.
+  // Usa requestAnimationFrame para renderização mais suave.
   const scrollToBottom = () => {
     const viewport = scrollAreaRef.current?.querySelector(
       '[data-radix-scroll-area-viewport]'
@@ -165,6 +168,8 @@ export function AIChatBox({
     }
   };
 
+  // Trata o envio da mensagem pelo formulário.
+  // Evita envio quando não há texto ou quando o modelo está carregando.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedInput = input.trim();
@@ -173,13 +178,14 @@ export function AIChatBox({
     onSendMessage(trimmedInput);
     setInput("");
 
-    // Scroll immediately after sending
+    // Rola imediatamente para baixo após o envio.
     scrollToBottom();
 
-    // Keep focus on input
+    // Retorna o foco para o campo de entrada para mensagens rápidas.
     textareaRef.current?.focus();
   };
 
+  // Suporta Enter para enviar e Shift+Enter para nova linha.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -196,7 +202,7 @@ export function AIChatBox({
       )}
       style={{ height }}
     >
-      {/* Messages Area */}
+      {/* Área de mensagens */}
       <div ref={scrollAreaRef} className="flex-1 overflow-hidden">
         {displayMessages.length === 0 ? (
           <div className="flex h-full flex-col p-4">
@@ -226,7 +232,7 @@ export function AIChatBox({
           <ScrollArea className="h-full">
             <div className="flex flex-col space-y-4 p-4">
               {displayMessages.map((message, index) => {
-                // Apply min-height to last message only if NOT loading (when loading, the loading indicator gets it)
+                // Aplica min-height apenas à última mensagem quando NÃO estiver carregando
                 const isLastMessage = index === displayMessages.length - 1;
                 const shouldApplyMinHeight =
                   isLastMessage && !isLoading && minHeightForLastMessage > 0;
@@ -302,7 +308,7 @@ export function AIChatBox({
         )}
       </div>
 
-      {/* Input Area */}
+      {/* Área de entrada: composer de mensagem e botão de envio */}
       <form
         ref={inputAreaRef}
         onSubmit={handleSubmit}

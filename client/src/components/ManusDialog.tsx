@@ -18,6 +18,8 @@ interface ManusDialogProps {
   onClose?: () => void;
 }
 
+// Dialog simples para exibir a janela de login do Manus.
+// Suporta controle externo via onOpenChange ou gerenciamento interno de estado.
 export function ManusDialog({
   title,
   logo,
@@ -35,12 +37,14 @@ export function ManusDialog({
   }, [open, onOpenChange]);
 
   const handleOpenChange = (nextOpen: boolean) => {
+    // Atualiza o estado local ou notifica o controlador externo, se houver.
     if (onOpenChange) {
       onOpenChange(nextOpen);
     } else {
       setInternalOpen(nextOpen);
     }
 
+    // Executa callback de fechamento sempre que o modal é fechado.
     if (!nextOpen) {
       onClose?.();
     }
