@@ -32,47 +32,24 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
+    const existingUser = await getUserByOpenId(user.openId);
+    
     const values: InsertUser = {
       openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
+      name: user.name ?? null,
+      email: user.email ?? null,
+      loginMethod: user.loginMethod ?? null,
+      role: user.role ?? (user.openId === ENV.ownerOpenId ? 'admin' : 'user'),
+      lastSignedIn: user.lastSignedIn ?? new Date(),
     };
 
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
+    if (existingUser) {
+      // Update existing user
+      await db.update(users).set(values).where(eq(users.openId, user.openId));
+    } else {
+      // Insert new user
+      await db.insert(users).values(values);
     }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -217,11 +194,11 @@ export async function importFuncionariosCSV(csvContent: string) {
       const data: InsertFuncionario = {
         nome: row.nome || '',
         funcao: row.funcao || '',
-        setor: row.setor || '',
+        situacao: row.situacao || 'CLT',
+        forma_pagamento: row.forma_pagamento || 'Pix',
+        pix: row.pix || null,
         salario_base: Math.round(parseFloat(row.salario_base || '0') * 100),
-        data_admissao: row.data_admissao || null,
-        situacao: row.situacao || 'Ativo',
-        ativo: row.ativo === '1' || row.ativo === 'true' ? 1 : 0,
+        ativo: row.ativo === '1' || row.ativo === 'true' ? 1 : 1,
       };
       const result = await db.insert(funcionarios).values(data);
       results.push({ success: true, data });
