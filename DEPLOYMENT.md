@@ -4,108 +4,94 @@ Este guia explica como fazer o deploy do sistema SmartBi na nuvem para que o cli
 
 ## Arquitetura de Deployment
 
-- **Frontend**: Vercel (React + Vite)
-- **Backend**: Railway (Node.js + Express + tRPC)
-- **Banco de Dados**: PlanetScale ou Supabase (MySQL)
+- **Aplicação**: Monolito Node.js (Express + React + Vite)
+- **Banco de Dados**: SQLite (arquivo local)
+- **Plataforma**: Railway ou Vercel
 
 ## Pré-requisitos
 
-1. Conta no Vercel (vercel.com)
-2. Conta no Railway (railway.app)
-3. Conta no PlanetScale (planetscale.com) ou Supabase (supabase.com)
-4. Repositório no GitHub
+1. Conta no Railway (railway.app) ou Vercel (vercel.com)
+2. Repositório no GitHub
 
 ## Passo 1: Configurar Banco de Dados
 
-### Opção A: PlanetScale (Recomendado)
+O projeto usa SQLite local, que é um arquivo de banco de dados armazenado junto com a aplicação. Não é necessário configurar um banco de dados externo.
 
-1. Crie uma conta em https://planetscale.com
-2. Crie um novo banco de dados
-3. Crie uma senha de acesso
-4. Copie a connection string (DATABASE_URL)
+**Nota**: Para produção com múltiplos usuários simultâneos, considere migrar para PostgreSQL ou MySQL.
 
-### Opção B: Supabase
-
-1. Crie uma conta em https://supabase.com
-2. Crie um novo projeto
-3. Vá em Settings > Database
-4. Copie a connection string
-
-## Passo 2: Configurar Backend no Railway
+## Passo 2: Deploy no Railway (Recomendado)
 
 1. Faça push do código para o GitHub
 2. Acesse https://railway.app
 3. Clique em "New Project" > "Deploy from GitHub repo"
 4. Selecione o repositório do SmartBi
 5. Configure as variáveis de ambiente:
-   - `DATABASE_URL`: Connection string do banco de dados
    - `NODE_ENV`: `production`
-   - `OAUTH_SERVER_URL`: (opcional, se usar autenticação)
-   - `OWNER_OPEN_ID`: (opcional, se usar autenticação)
+   - `DATABASE_URL`: `./smartbi.db` (padrão)
 6. Clique em "Deploy"
 
-## Passo 3: Configurar Frontend no Vercel
+## Passo 3: Deploy no Vercel (Alternativa)
 
 1. Acesse https://vercel.com
 2. Clique em "New Project" > "Import Git Repository"
 3. Selecione o repositório do SmartBi
 4. Configure as variáveis de ambiente:
-   - `VITE_API_URL`: URL do backend Railway (ex: https://seu-backend.railway.app)
+   - `NODE_ENV`: `production`
+   - `DATABASE_URL`: `./smartbi.db` (padrão)
 5. Clique em "Deploy"
 
-## Passo 4: Atualizar Frontend para Usar Backend em Nuvem
+## Passo 4: Configurar Script de Build
 
-No arquivo `client/src/lib/trpc.ts`, atualize a URL do backend:
+No `package.json`, o script de build já está configurado:
 
-```typescript
-export const trpc = createTRPCReact<AppRouter>();
-
-export const trpcClient = createTRPCClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      url: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-    }),
-  ],
-});
+```json
+"build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
 ```
 
 ## Passo 5: Testar
 
-1. Acesse a URL do Vercel
+1. Acesse a URL fornecida pela plataforma (Railway ou Vercel)
 2. Verifique se o sistema está funcionando
 3. Teste as funcionalidades de CRUD
 4. Teste a importação de CSV
 
 ## Variáveis de Ambiente Necessárias
 
-### Backend (Railway)
-- `DATABASE_URL`: Connection string do MySQL
 - `NODE_ENV`: `production`
-- `OAUTH_SERVER_URL`: (opcional)
-- `OWNER_OPEN_ID`: (opcional)
+- `DATABASE_URL`: Caminho para o arquivo SQLite (padrão: `./smartbi.db`)
 
-### Frontend (Vercel)
-- `VITE_API_URL`: URL do backend Railway
+## Limitações do SQLite
+
+- **Acesso simultâneo**: SQLite suporta leituras simultâneas, mas escritas são sequenciais
+- **Escalabilidade**: Para aplicações com alto volume de dados, considere PostgreSQL/MySQL
+- **Backup**: O arquivo SQLite deve ser backupado regularmente
+
+## Migração para Banco de Dados Externo (Opcional)
+
+Se precisar de um banco de dados mais robusto:
+
+1. **PlanetScale (MySQL)** ou **Supabase (PostgreSQL)**
+2. Atualize `drizzle.config.ts` para usar o dialeto correspondente
+3. Atualize `DATABASE_URL` nas variáveis de ambiente
+4. Execute as migrações com `pnpm db:push`
 
 ## Manutenção
 
 - Para atualizar o sistema, faça push das mudanças para o GitHub
-- Railway e Vercel farão deploy automático
-- Backup do banco de dados é gerenciado pelo PlanetScale/Supabase
+- Railway/Vercel farão deploy automático
+- Backup do banco de dados SQLite deve ser feito manualmente ou configurado
 
 ## Suporte ao Cliente
 
 Forneça ao cliente:
-1. URL do sistema (Vercel)
-2. Instruções de login (se tiver autenticação)
-3. Documentação de uso
-4. Seu contato para suporte
+1. URL do sistema (Railway ou Vercel)
+2. Documentação de uso
+3. Seu contato para suporte
 
 ## Custos Estimados
 
+- Railway: Plano gratuito ($5 de crédito inicial) ou ~$5-20/mês
 - Vercel: Plano gratuito (suficiente para uso moderado)
-- Railway: ~$5-20/mês dependendo do uso
-- PlanetScale: Plano gratuito (até 5GB) ou ~$29/mês (pro)
-- Supabase: Plano gratuito (até 500MB) ou ~$25/mês (pro)
+- SQLite: Gratuito (arquivo local)
 
-Total estimado: $0-50/mês
+Total estimado: $0-20/mês
