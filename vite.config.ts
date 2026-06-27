@@ -1,29 +1,43 @@
+// Importação de plugins do Vite
 import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+
+// Importação de módulos do Node.js
 import fs from "node:fs";
 import path from "node:path";
+
+// Importação de tipos e funções do Vite
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+
+// Importação do plugin de runtime Manus
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
-// Manus Debug Collector - Vite Plugin
-// Writes browser logs directly to files, trimmed when exceeding size limit
+// Manus Debug Collector - Plugin Vite para coleta de logs de debug
+// Escreve logs do navegador diretamente em arquivos, trimando quando excede limite
 // =============================================================================
 
 const PROJECT_ROOT = import.meta.dirname;
 const LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
-const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024; // 1MB per log file
-const TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6); // Trim to 60% to avoid constant re-trimming
+const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024; // 1MB por arquivo de log
+const TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6); // Trim para 60% para evitar re-trim constante
 
 type LogSource = "browserConsole" | "networkRequests" | "sessionReplay";
 
+/**
+ * ensureLogDir cria o diretório de logs se não existir
+ */
 function ensureLogDir() {
   if (!fs.existsSync(LOG_DIR)) {
     fs.mkdirSync(LOG_DIR, { recursive: true });
   }
 }
 
+/**
+ * trimLogFile trim o arquivo de log se exceder o tamanho máximo
+ * Mantém as linhas mais recentes que cabem em 60% do tamanho máximo
+ */
 function trimLogFile(logPath: string, maxSize: number) {
   try {
     if (!fs.existsSync(logPath) || fs.statSync(logPath).size <= maxSize) {
@@ -34,7 +48,7 @@ function trimLogFile(logPath: string, maxSize: number) {
     const keptLines: string[] = [];
     let keptBytes = 0;
 
-    // Keep newest lines (from end) that fit within 60% of maxSize
+    // Mantém as linhas mais recentes (do final) que cabem em 60% do maxSize
     const targetSize = TRIM_TARGET_BYTES;
     for (let i = lines.length - 1; i >= 0; i--) {
       const lineBytes = Buffer.byteLength(`${lines[i]}\n`, "utf-8");
@@ -45,34 +59,38 @@ function trimLogFile(logPath: string, maxSize: number) {
 
     fs.writeFileSync(logPath, keptLines.join("\n"), "utf-8");
   } catch {
-    /* ignore trim errors */
+    /* ignora erros de trim */
   }
 }
 
+/**
+ * writeToLogFile escreve entradas de log no arquivo apropriado
+ * Formata com timestamps e trim se exceder tamanho máximo
+ */
 function writeToLogFile(source: LogSource, entries: unknown[]) {
   if (entries.length === 0) return;
 
   ensureLogDir();
   const logPath = path.join(LOG_DIR, `${source}.log`);
 
-  // Format entries with timestamps
+  // Formata entradas com timestamps
   const lines = entries.map((entry) => {
     const ts = new Date().toISOString();
     return `[${ts}] ${JSON.stringify(entry)}`;
   });
 
-  // Append to log file
+  // Adiciona ao arquivo de log
   fs.appendFileSync(logPath, `${lines.join("\n")}\n`, "utf-8");
 
-  // Trim if exceeds max size
+  // Trim se exceder tamanho máximo
   trimLogFile(logPath, MAX_LOG_SIZE_BYTES);
 }
 
 /**
- * Vite plugin to collect browser debug logs
- * - POST /__manus__/logs: Browser sends logs, written directly to files
- * - Files: browserConsole.log, networkRequests.log, sessionReplay.log
- * - Auto-trimmed when exceeding 1MB (keeps newest entries)
+ * vitePluginManusDebugCollector é um plugin Vite para coletar logs de debug do navegador
+ * - POST /__manus__/logs: Navegador envia logs, escritos diretamente em arquivos
+ * - Arquivos: browserConsole.log, networkRequests.log, sessionReplay.log
+ * - Auto-trim quando exceder 1MB (mantém entradas mais recentes)
  */
 function vitePluginManusDebugCollector(): Plugin {
   return {
@@ -98,14 +116,14 @@ function vitePluginManusDebugCollector(): Plugin {
     },
 
     configureServer(server: ViteDevServer) {
-      // POST /__manus__/logs: Browser sends logs (written directly to files)
+      // POST /__manus__/logs: Navegador envia logs (escritos diretamente em arquivos)
       server.middlewares.use("/__manus__/logs", (req, res, next) => {
         if (req.method !== "POST") {
           return next();
         }
 
         const handlePayload = (payload: any) => {
-          // Write logs directly to files
+          // Escreve logs diretamente em arquivos
           if (payload.consoleLogs?.length > 0) {
             writeToLogFile("browserConsole", payload.consoleLogs);
           }
@@ -150,9 +168,16 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
+// Lista de plugins do Vite
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime()];
+
+// Caminho base para GitHub Pages ou local
 const BASE_PATH = process.env.GITHUB_PAGES ? "/SmartBI/" : "/";
 
+/**
+ * Configuração principal do Vite
+ * Define plugins, aliases, diretórios e configurações de servidor
+ */
 export default defineConfig({
   base: BASE_PATH,
   plugins,

@@ -1,3 +1,4 @@
+// Importação de componentes UI do shadcn/ui para demonstração
 import {
   Accordion,
   AccordionContent,
@@ -157,9 +158,15 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Importação do hook de tema para alternar entre light/dark mode
 import { useTheme } from "@/contexts/ThemeContext";
+
+// Importação de funções de formatação de data do date-fns
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
+
+// Importação de ícones do Lucide React
 import {
   AlertCircle,
   CalendarIcon,
@@ -169,30 +176,86 @@ import {
   Sun,
   X,
 } from "lucide-react";
+
+// Importação do hook useState do React
 import { useState } from "react";
+
+// Importação do toast do Sonner para notificações
 import { toast as sonnerToast } from "sonner";
+
+// Importação do componente AIChatBox e tipo Message
 import { AIChatBox, type Message } from "@/components/AIChatBox";
 
+/**
+ * ComponentsShowcase é uma página de demonstração de componentes UI
+ * 
+ * Funcionalidades:
+ * - Demonstração de todos os componentes do shadcn/ui
+ * - Exibição de cores e combinações de cores
+ * - Demonstração de botões, inputs, formulários
+ * - Demonstração de componentes de exibição de dados
+ * - Demonstração de componentes de navegação
+ * - Demonstração de componentes de sobreposição (dialog, drawer, sheet)
+ * - Demonstração de componentes de feedback (alert, toast, progress)
+ * - Demonstração do componente AIChatBox com simulação de chat
+ * - Alternância de tema (light/dark mode)
+ * - Exemplos interativos de cada componente
+ * 
+ * Componentes demonstrados:
+ * - Accordion, Alert, Avatar, Badge, Breadcrumb, Button, Calendar, Card
+ * - Carousel, Checkbox, Collapsible, Command, ContextMenu, Dialog, Drawer
+ * - DropdownMenu, HoverCard, Input, InputOTP, Label, Menubar, Pagination
+ * - Popover, Progress, RadioGroup, Resizable, ScrollArea, Select, Separator
+ * - Sheet, Skeleton, Slider, Switch, Table, Tabs, Textarea, Toggle, Tooltip
+ * - AIChatBox (componente customizado)
+ */
 export default function ComponentsShowcase() {
+  // Hook para obter tema atual e função para alternar
   const { theme, toggleTheme } = useTheme();
+  
+  // Estado para data selecionada no calendário
   const [date, setDate] = useState<Date | undefined>(new Date());
+  
+  // Estado para data selecionada no date picker
   const [datePickerDate, setDatePickerDate] = useState<Date>();
+  
+  // Estado para frutas selecionadas (exemplo de múltipla seleção)
   const [selectedFruits, setSelectedFruits] = useState<string[]>([]);
+  
+  // Estado para valor de progresso
   const [progress, setProgress] = useState(33);
+  
+  // Estado para página atual na paginação
   const [currentPage, setCurrentPage] = useState(2);
+  
+  // Estado para controlar abertura do combobox
   const [openCombobox, setOpenCombobox] = useState(false);
+  
+  // Estado para framework selecionado no combobox
   const [selectedFramework, setSelectedFramework] = useState("");
+  
+  // Estado para mês selecionado
   const [selectedMonth, setSelectedMonth] = useState("");
+  
+  // Estado para ano selecionado
   const [selectedYear, setSelectedYear] = useState("");
+  
+  // Estado para input do dialog
   const [dialogInput, setDialogInput] = useState("");
+  
+  // Estado para controlar abertura do dialog
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // AI ChatBox demo state
+  // Estado para demonstração do AIChatBox
   const [chatMessages, setChatMessages] = useState<Message[]>([
     { role: "system", content: "You are a helpful assistant." },
   ]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
+  /**
+ * handleDialogSubmit processa o envio do formulário do dialog
+ * Exibe toast de sucesso e limpa o formulário
+ */
   const handleDialogSubmit = () => {
     console.log("Dialog submitted with value:", dialogInput);
     sonnerToast.success("Submitted successfully", {
@@ -202,6 +265,10 @@ export default function ComponentsShowcase() {
     setDialogOpen(false);
   };
 
+  /**
+ * handleDialogKeyDown gerencia evento de teclado no input do dialog
+ * Permite submissão com Enter (verificando composição IME)
+ */
   const handleDialogKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -209,12 +276,17 @@ export default function ComponentsShowcase() {
     }
   };
 
+  /**
+ * handleChatSend processa envio de mensagem no chat de demonstração
+ * Simula resposta da IA com delay de 1.5 segundos
+ * Em um app real, chamaria mutation tRPC para IA
+ */
   const handleChatSend = (content: string) => {
-    // Add user message
+    // Adiciona mensagem do usuário
     const newMessages: Message[] = [...chatMessages, { role: "user", content }];
     setChatMessages(newMessages);
 
-    // Simulate AI response with delay
+    // Simula resposta da IA com delay
     setIsChatLoading(true);
     setTimeout(() => {
       const aiResponse: Message = {
@@ -229,10 +301,12 @@ export default function ComponentsShowcase() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <main className="container max-w-6xl mx-auto">
+        {/* Cabeçalho com título e botão de alternância de tema */}
         <div className="space-y-2 justify-between flex">
           <h2 className="text-3xl font-bold tracking-tight mb-6">
             Shadcn/ui Component Library
           </h2>
+          {/* Botão para alternar entre light/dark mode */}
           <Button variant="outline" size="icon" onClick={toggleTheme}>
             {theme === "light" ? (
               <Moon className="h-5 w-5" />
@@ -243,7 +317,7 @@ export default function ComponentsShowcase() {
         </div>
 
         <div className="space-y-12">
-          {/* Text Colors Section */}
+          {/* Seção de Cores de Texto */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Text Colors</h3>
             <Card>
@@ -322,7 +396,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Color Combinations Section */}
+          {/* Seção de Combinações de Cores */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Color Combinations</h3>
             <Card>
@@ -381,7 +455,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Buttons Section */}
+          {/* Seção de Botões */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Buttons</h3>
             <Card>
@@ -403,15 +477,17 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Form Inputs Section */}
+          {/* Seção de Inputs de Formulário */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Form Inputs</h3>
             <Card>
               <CardContent className="pt-6 space-y-6">
+                {/* Campo de Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" placeholder="Email" />
                 </div>
+                {/* Campo de Textarea */}
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
                   <Textarea
@@ -419,6 +495,7 @@ export default function ComponentsShowcase() {
                     placeholder="Type your message here."
                   />
                 </div>
+                {/* Campo Select */}
                 <div className="space-y-2">
                   <Label>Select</Label>
                   <Select>
@@ -432,14 +509,17 @@ export default function ComponentsShowcase() {
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Checkbox */}
                 <div className="flex items-center space-x-2">
                   <Checkbox id="terms" />
                   <Label htmlFor="terms">Accept terms and conditions</Label>
                 </div>
+                {/* Switch */}
                 <div className="flex items-center space-x-2">
                   <Switch id="airplane-mode" />
                   <Label htmlFor="airplane-mode">Airplane Mode</Label>
                 </div>
+                {/* Radio Group */}
                 <div className="space-y-2">
                   <Label>Radio Group</Label>
                   <RadioGroup defaultValue="option-one">
@@ -453,10 +533,12 @@ export default function ComponentsShowcase() {
                     </div>
                   </RadioGroup>
                 </div>
+                {/* Slider */}
                 <div className="space-y-2">
                   <Label>Slider</Label>
                   <Slider defaultValue={[50]} max={100} step={1} />
                 </div>
+                {/* Input OTP */}
                 <div className="space-y-2">
                   <Label>Input OTP</Label>
                   <InputOTP maxLength={6}>
@@ -677,11 +759,12 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Data Display Section */}
+          {/* Seção de Exibição de Dados */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Data Display</h3>
             <Card>
               <CardContent className="pt-6 space-y-6">
+                {/* Badges - Emblemas para status e categorias */}
                 <div className="space-y-2">
                   <Label>Badges</Label>
                   <div className="flex flex-wrap gap-2">
@@ -692,6 +775,7 @@ export default function ComponentsShowcase() {
                   </div>
                 </div>
                 <Separator />
+                {/* Avatar - Imagens de perfil */}
                 <div className="space-y-2">
                   <Label>Avatar</Label>
                   <div className="flex gap-4">
@@ -705,6 +789,7 @@ export default function ComponentsShowcase() {
                   </div>
                 </div>
                 <Separator />
+                {/* Progress - Barra de progresso interativa */}
                 <div className="space-y-2">
                   <Label>Progress</Label>
                   <Progress value={progress} />
@@ -724,6 +809,7 @@ export default function ComponentsShowcase() {
                   </div>
                 </div>
                 <Separator />
+                {/* Skeleton - Placeholder de carregamento */}
                 <div className="space-y-2">
                   <Label>Skeleton</Label>
                   <div className="space-y-2">
@@ -733,6 +819,7 @@ export default function ComponentsShowcase() {
                   </div>
                 </div>
                 <Separator />
+                {/* Pagination - Componente de paginação interativo */}
                 <div className="space-y-2">
                   <Label>Pagination</Label>
                   <Pagination>
@@ -776,6 +863,7 @@ export default function ComponentsShowcase() {
                   </p>
                 </div>
                 <Separator />
+                {/* Table - Tabela de dados */}
                 <div className="space-y-2">
                   <Label>Table</Label>
                   <Table>
@@ -811,6 +899,7 @@ export default function ComponentsShowcase() {
                   </Table>
                 </div>
                 <Separator />
+                {/* Menubar - Barra de menu de navegação */}
                 <div className="space-y-2">
                   <Label>Menubar</Label>
                   <Menubar>
@@ -842,6 +931,7 @@ export default function ComponentsShowcase() {
                   </Menubar>
                 </div>
                 <Separator />
+                {/* Breadcrumb - Navegação hierárquica */}
                 <div className="space-y-2">
                   <Label>Breadcrumb</Label>
                   <Breadcrumb>
@@ -866,7 +956,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Alerts Section */}
+          {/* Seção de Alertas - Notificações de aviso e erro */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Alerts</h3>
             <div className="space-y-4">
@@ -887,7 +977,7 @@ export default function ComponentsShowcase() {
             </div>
           </section>
 
-          {/* Tabs Section */}
+          {/* Seção de Abas - Componente de navegação por abas */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Tabs</h3>
             <Tabs defaultValue="account" className="w-full">
@@ -956,7 +1046,7 @@ export default function ComponentsShowcase() {
             </Tabs>
           </section>
 
-          {/* Accordion Section */}
+          {/* Seção de Accordion - Componente expansível/colapsável */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Accordion</h3>
             <Accordion type="single" collapsible className="w-full">
@@ -983,7 +1073,7 @@ export default function ComponentsShowcase() {
             </Accordion>
           </section>
 
-          {/* Collapsible Section */}
+          {/* Seção de Collapsible - Conteúdo expansível */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Collapsible</h3>
             <Collapsible>
@@ -1014,12 +1104,13 @@ export default function ComponentsShowcase() {
             </Collapsible>
           </section>
 
-          {/* Dialog, Sheet, Drawer Section */}
+          {/* Seção de Overlays - Componentes de sobreposição */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Overlays</h3>
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-wrap gap-4">
+                  {/* Dialog - Modal de diálogo com input */}
                   <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
                       <Button variant="outline">Open Dialog</Button>
@@ -1056,6 +1147,7 @@ export default function ComponentsShowcase() {
                     </DialogContent>
                   </Dialog>
 
+                  {/* Sheet - Painel lateral */}
                   <Sheet>
                     <SheetTrigger asChild>
                       <Button variant="outline">Open Sheet</Button>
@@ -1071,6 +1163,7 @@ export default function ComponentsShowcase() {
                     </SheetContent>
                   </Sheet>
 
+                  {/* Drawer - Gaveta inferior */}
                   <Drawer>
                     <DrawerTrigger asChild>
                       <Button variant="outline">Open Drawer</Button>
@@ -1091,6 +1184,7 @@ export default function ComponentsShowcase() {
                     </DrawerContent>
                   </Drawer>
 
+                  {/* Popover - Popover de conteúdo */}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline">Open Popover</Button>
@@ -1105,6 +1199,7 @@ export default function ComponentsShowcase() {
                     </PopoverContent>
                   </Popover>
 
+                  {/* Tooltip - Tooltip ao passar o mouse */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="outline">Hover me</Button>
@@ -1118,12 +1213,13 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Menus Section */}
+          {/* Seção de Menus - Componentes de menu */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Menus</h3>
             <Card>
               <CardContent className="pt-6">
                 <div className="flex flex-wrap gap-4">
+                  {/* DropdownMenu - Menu dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline">Dropdown Menu</Button>
@@ -1138,6 +1234,7 @@ export default function ComponentsShowcase() {
                     </DropdownMenuContent>
                   </DropdownMenu>
 
+                  {/* ContextMenu - Menu de contexto (clique direito) */}
                   <ContextMenu>
                     <ContextMenuTrigger asChild>
                       <Button variant="outline">Right Click Me</Button>
@@ -1150,6 +1247,7 @@ export default function ComponentsShowcase() {
                     </ContextMenuContent>
                   </ContextMenu>
 
+                  {/* HoverCard - Card ao passar o mouse */}
                   <HoverCard>
                     <HoverCardTrigger asChild>
                       <Button variant="outline">Hover Card</Button>
@@ -1169,7 +1267,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Calendar Section */}
+          {/* Seção de Calendar - Componente de calendário */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Calendar</h3>
             <Card>
@@ -1184,7 +1282,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Carousel Section */}
+          {/* Seção de Carousel - Componente de carrossel */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Carousel</h3>
             <Card>
@@ -1212,7 +1310,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Toggle Section */}
+          {/* Seção de Toggle - Componentes de toggle */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Toggle</h3>
             <Card>
@@ -1253,7 +1351,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Aspect Ratio & Scroll Area Section */}
+          {/* Seção de Layout Components - Componentes de layout */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Layout Components</h3>
             <Card>
@@ -1285,7 +1383,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Resizable Section */}
+          {/* Seção de Resizable Panels - Painéis redimensionáveis */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Resizable Panels</h3>
             <Card>
@@ -1310,7 +1408,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* Toast Section */}
+          {/* Seção de Toast - Notificações toast */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">Toast</h3>
             <Card>
@@ -1391,7 +1489,7 @@ export default function ComponentsShowcase() {
             </Card>
           </section>
 
-          {/* AI ChatBox Section */}
+          {/* Seção de AI ChatBox - Componente de chat com IA */}
           <section className="space-y-4">
             <h3 className="text-2xl font-semibold">AI ChatBox</h3>
             <Card>
@@ -1406,6 +1504,7 @@ export default function ComponentsShowcase() {
                       This is a demo with simulated responses. In a real app, you'd connect it to a tRPC mutation.
                     </p>
                   </div>
+                  {/* Componente AIChatBox com mensagens, handler de envio, estado de carregamento e sugestões */}
                   <AIChatBox
                     messages={chatMessages}
                     onSendMessage={handleChatSend}
@@ -1427,6 +1526,7 @@ export default function ComponentsShowcase() {
         </div>
       </main>
 
+      {/* Footer da página */}
       <footer className="border-t py-6 mt-12">
         <div className="container text-center text-sm text-muted-foreground">
           <p>Shadcn/ui Component Showcase</p>

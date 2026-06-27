@@ -1,4 +1,7 @@
+// Importações de hooks personalizados para autenticação e responsividade
 import { useAuth } from "@/_core/hooks/useAuth";
+
+// Importações de componentes UI shadcn para avatar e menu dropdown
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -6,6 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Importações de componentes de sidebar para navegação lateral
 import {
   Sidebar,
   SidebarContent,
@@ -19,14 +24,30 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+
+// Importações de constantes para configuração de autenticação
 import { getLoginUrl, isAuthConfigured } from "@/const";
+
+// Importação de hook personalizado para detectar dispositivos móveis
 import { useIsMobile } from "@/hooks/useMobile";
+
+// Importações de ícones Lucide React para a interface
 import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Factory, BarChart3, CalendarDays } from "lucide-react";
+
+// Importações de React para gerenciamento de estado e efeitos
 import { CSSProperties, useEffect, useRef, useState } from "react";
+
+// Importação do hook de roteamento Wouter para navegação
 import { useLocation } from "wouter";
+
+// Importação do componente de esqueleto para estado de carregamento
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+
+// Importação do componente Button da biblioteca UI
 import { Button } from "./ui/button";
 
+// Configuração dos itens do menu de navegação da sidebar
+// Cada item contém: ícone, label (texto exibido) e caminho da rota
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Funcionários", path: "/funcionarios" },
@@ -37,43 +58,60 @@ const menuItems = [
   { icon: CalendarDays, label: "Visão Anual", path: "/visao-anual" },
 ];
 
+// Constantes para gerenciamento da largura da sidebar
+// SIDEBAR_WIDTH_KEY: chave usada no localStorage para persistir a largura
+// DEFAULT_WIDTH: largura padrão da sidebar em pixels
+// MIN_WIDTH: largura mínima permitida para redimensionamento
+// MAX_WIDTH: largura máxima permitida para redimensionamento
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
 const DEFAULT_WIDTH = 280;
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
 
-// DashboardLayout é o wrapper principal da página que fornece:
-// - controle de autenticação
-// - redimensionamento e colapso da sidebar
-// - fallback em modo convidado quando a autenticação não está configurada
+/**
+ * DashboardLayout é o componente wrapper principal das páginas do dashboard.
+ * Responsabilidades:
+ * - Gerenciar controle de autenticação e redirecionamento
+ * - Permitir redimensionamento e colapso da sidebar
+ * - Fornecer fallback em modo convidado quando autenticação não está configurada
+ * - Persistir preferências de largura da sidebar no localStorage
+ * 
+ * @param children - Componentes filhos a serem renderizados dentro do layout
+ */
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // A largura da sidebar é persistida no localStorage para manter a preferência do usuário.
+  // Estado para controlar a largura da sidebar
+  // Inicializa com valor salvo no localStorage ou usa valor padrão
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
 
-  // Estado de autenticação usado pelo layout.
+  // Hook de autenticação para obter estado de loading e usuário atual
   const { loading, user } = useAuth();
+  
+  // Verifica se a autenticação está configurada no sistema
   const authConfigured = isAuthConfigured();
+  
+  // Obtém URL de login configurada
   const loginUrl = getLoginUrl();
 
-  // Persiste a largura atual da sidebar sempre que ela muda.
+  // Efeito para persistir a largura da sidebar no localStorage sempre que mudar
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
 
+  // Estado de carregamento: exibe esqueleto enquanto autenticação está sendo verificada
   if (loading) {
-    // Exibe um esqueleto enquanto o estado de autenticação ainda está carregando.
     return <DashboardLayoutSkeleton />
   }
 
+  // Caso autenticação esteja configurada mas não há usuário logado
+  // Redireciona para tela de login
   if (!user && authConfigured) {
-    // Se a autenticação está configurada e não há usuário logado, força o fluxo de login.
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
@@ -99,9 +137,10 @@ export default function DashboardLayout({
     );
   }
 
+  // Caso autenticação não esteja configurada e não há usuário
+  // Renderiza UI em modo convidado (guest mode)
+  // Permite explorar o dashboard sem login, mas alguns dados podem não estar disponíveis
   if (!user && !authConfigured) {
-    // A autenticação não está configurada, mas ainda assim renderizamos a UI em modo convidado.
-    // Isso fornece um shell de dashboard utilizável sem exigir login.
     return (
       <SidebarProvider
         style={
@@ -125,6 +164,8 @@ export default function DashboardLayout({
     );
   }
 
+  // Caso usuário esteja autenticado ou modo convidado está ativo
+  // Renderiza o layout completo com sidebar e conteúdo
   return (
     <SidebarProvider
       style={
@@ -140,61 +181,80 @@ export default function DashboardLayout({
   );
 }
 
-// Wrapper interno de conteúdo renderizado após as condições de autenticação serem resolvidas.
-// Este componente contém a sidebar, navegação, menu do usuário e a área principal.
+/**
+ * Tipagem das props do componente DashboardLayoutContent
+ * Este é o wrapper interno que contém a sidebar e o conteúdo principal
+ */
 type DashboardLayoutContentProps = {
-  children: React.ReactNode;
-  setSidebarWidth: (width: number) => void;
-  sidebarWidth: number;
+  children: React.ReactNode; // Conteúdo a ser renderizado
+  setSidebarWidth: (width: number) => void; // Função para atualizar largura da sidebar
+  sidebarWidth: number; // Largura atual da sidebar
 };
 
+/**
+ * DashboardLayoutContent é o componente interno que renderiza:
+ * - Sidebar com menu de navegação
+ * - Menu de usuário com opção de logout
+ * - Área principal de conteúdo
+ * - Funcionalidade de redimensionamento da sidebar
+ * 
+ * Este componente só é renderizado após as condições de autenticação serem resolvidas
+ */
 function DashboardLayoutContent({
   children,
   setSidebarWidth,
   sidebarWidth,
 }: DashboardLayoutContentProps) {
-  // Estado de autenticação para o menu de usuário da sidebar.
+  // Hook de autenticação para obter dados do usuário e função de logout
   const { user, logout } = useAuth();
 
-  // Integração com o roteador Wouter.
+  // Hook do Wouter para obter rota atual e função de navegação
   const [location, setLocation] = useLocation();
 
-  // Estado da sidebar proveniente do provider personalizado.
+  // Hook do provider de sidebar para obter estado e função de toggle
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
 
-  // Estado de redimensionamento da sidebar via mouse.
+  // Estado para controlar se a sidebar está sendo redimensionada
   const [isResizing, setIsResizing] = useState(false);
+  
+  // Referência ao elemento DOM do container da sidebar
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Determina a página ativa para destacar o menu correto.
+  // Encontra o item de menu ativo baseado na rota atual
   const activeMenuItem = menuItems.find(item => item.path === location);
+  
+  // Hook para detectar se está em dispositivo móvel
   const isMobile = useIsMobile();
 
-  // Se a sidebar colapsar durante o arraste, encerra o redimensionamento.
+  // Efeito: encerra redimensionamento se a sidebar for colapsada durante o arraste
   useEffect(() => {
     if (isCollapsed) {
       setIsResizing(false);
     }
   }, [isCollapsed]);
 
+  // Efeito: gerencia eventos de mouse para redimensionamento da sidebar
   useEffect(() => {
-    // Adiciona eventos de mouse apenas enquanto a sidebar estiver sendo redimensionada.
+    // Função que calcula nova largura baseada na posição do mouse
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing) return;
 
       const sidebarLeft = sidebarRef.current?.getBoundingClientRect().left ?? 0;
       const newWidth = e.clientX - sidebarLeft;
+      
+      // Limita a largura entre mínimo e máximo
       if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) {
         setSidebarWidth(newWidth);
       }
     };
 
+    // Função que encerra o modo de redimensionamento
     const handleMouseUp = () => {
-      // Encerra o modo de redimensionamento quando o mouse é solto.
       setIsResizing(false);
     };
 
+    // Adiciona listeners de mouse apenas durante redimensionamento
     if (isResizing) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
@@ -202,6 +262,7 @@ function DashboardLayoutContent({
       document.body.style.userSelect = "none";
     }
 
+    // Cleanup: remove listeners e restaura cursor
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
@@ -210,16 +271,19 @@ function DashboardLayoutContent({
     };
   }, [isResizing, setSidebarWidth]);
 
-  // Renderiza o shell do dashboard com sidebar, menu e painel principal.
+  // Renderiza o shell completo do dashboard
   return (
     <div className="relative flex min-h-screen" ref={sidebarRef}>
+      {/* Componente Sidebar com configurações de colapso e estilo glassmorphism */}
       <Sidebar
         collapsible="icon"
-        className="border-r-0"
+        className="border-r-0 glass-card"
         disableTransition={isResizing}
       >
+        {/* Header da sidebar com botão de toggle e título */}
         <SidebarHeader className="h-16 justify-center">
             <div className="flex items-center gap-3 px-2 transition-all w-full">
+              {/* Botão para colapsar/expandir sidebar */}
               <button
                 onClick={toggleSidebar}
                 className="h-8 w-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
@@ -227,6 +291,7 @@ function DashboardLayoutContent({
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
+              {/* Título "Navigation" exibido apenas quando sidebar não está colapsada */}
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
@@ -237,22 +302,10 @@ function DashboardLayoutContent({
             </div>
           </SidebarHeader>
 
-          {!isCollapsed ? (
-            <div className="px-3 pb-2">
-              <Button
-                variant={location === "/dashboard-producao" ? "secondary" : "outline"}
-                size="sm"
-                className="w-full justify-start gap-2"
-                onClick={() => setLocation("/dashboard-producao")}
-              >
-                <BarChart3 className="h-4 w-4" />
-                Dashboard Produção
-              </Button>
-            </div>
-          ) : null}
-
+          {/* Conteúdo da sidebar com menu de navegação */}
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
+              {/* Mapeia os itens do menu e renderiza cada um */}
               {menuItems.map(item => {
                 const isActive = location === item.path;
                 return (
@@ -261,12 +314,14 @@ function DashboardLayoutContent({
                       isActive={isActive}
                       onClick={() => setLocation(item.path)}
                       tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
+                      className={`h-10 transition-all font-normal ${isActive ? "glass-card-gradient" : ""}`}
                     >
+                      {/* Ícone do item de menu */}
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
                       />
-                      <span>{item.label}</span>
+                      {/* Label do item com gradiente se ativo */}
+                      <span className={isActive ? "gradient-text" : ""}>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -274,15 +329,19 @@ function DashboardLayoutContent({
             </SidebarMenu>
           </SidebarContent>
 
+          {/* Footer da sidebar com menu de usuário */}
           <SidebarFooter className="p-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
+                {/* Botão do menu de usuário com avatar e informações */}
                 <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-accent/50 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 border shrink-0">
+                    {/* Fallback do avatar com primeira letra do nome do usuário */}
                     <AvatarFallback className="text-xs font-medium">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
+                  {/* Informações do usuário (nome e email) */}
                   <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
                     <p className="text-sm font-medium truncate leading-none">
                       {user?.name || "-"}
@@ -293,6 +352,7 @@ function DashboardLayoutContent({
                   </div>
                 </button>
               </DropdownMenuTrigger>
+              {/* Conteúdo do dropdown com opção de logout */}
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   onClick={logout}
@@ -305,7 +365,8 @@ function DashboardLayoutContent({
             </DropdownMenu>
           </SidebarFooter>
         </Sidebar>
-        {/* Alça de redimensionamento: inicia o modo de redimensionamento com o mouse */}
+        
+        {/* Alça de redimensionamento: área invisível à direita da sidebar que inicia o redimensionamento ao arrastar */}
         <div
           className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
           onMouseDown={() => {
@@ -315,6 +376,7 @@ function DashboardLayoutContent({
           style={{ zIndex: 50 }}
         />
 
+        {/* Área principal de conteúdo (SidebarInset) */}
         <SidebarInset className="flex-1 min-w-0">
           <div className="flex-1 p-4">{children}</div>
         </SidebarInset>

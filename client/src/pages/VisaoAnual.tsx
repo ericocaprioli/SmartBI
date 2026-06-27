@@ -1,26 +1,73 @@
+// Importação de hooks do React para gerenciar estado e memoização
 import { useState, useMemo } from "react";
+
+// Importação do cliente tRPC para chamadas de API
 import { trpc } from "@/lib/trpc";
+
+// Importação de componentes UI
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Importação de componentes de gráficos do Recharts
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+// Importação do layout do dashboard
 import DashboardLayout from "@/components/DashboardLayout";
 
+/**
+ * Lista de anos disponíveis para seleção na visão anual
+ */
 const ANOS = [
   { value: "2026", label: "2026" },
   { value: "2025", label: "2025" },
 ];
 
+/**
+ * Nomes abreviados dos meses para exibição nos gráficos
+ */
 const MESES_NOMES = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
 ];
 
+/**
+ * VisaoAnual é a página de consolidação mensal de dados anuais
+ * 
+ * Funcionalidades:
+ * - Seleção de ano para análise
+ * - Consolidação de dados de pagamentos e produção por mês
+ * - Cálculo de totais anuais (salários, descontos, faturamento, produção)
+ * - Gráficos de evolução mensal de custos, faturamento e produção
+ * - Gráfico comparativo de custo de folha vs faturamento
+ * - Tabela detalhada mensal com margem calculada
+ * - Conversão de valores de centavos para reais na exibição
+ * 
+ * Cálculos realizados:
+ * - Soma de salários líquidos por mês
+ * - Soma de descontos (INSS + descontos diversos) por mês
+ * - Soma de faturamento mensal por mês
+ * - Soma de produção realizada e meta por mês
+ * - Custo total de folha (salários + descontos)
+ * - Margem (faturamento - custo total)
+ */
 export default function VisaoAnual() {
+  // Estado para ano selecionado (padrão: 2026)
   const [anoSelecionado, setAnoSelecionado] = useState("2026");
   
+  // Query para listar funcionários
   const { data: funcionarios } = trpc.funcionarios.list.useQuery();
-  const { data: pagamentos } = trpc.pagamentos.listAll.useQuery(); // Buscar todos os pagamentos
-  const { data: producao } = trpc.producao.listAll.useQuery(); // Buscar toda a produção
+  
+  // Query para listar todos os pagamentos (não filtrado por mês)
+  const { data: pagamentos } = trpc.pagamentos.listAll.useQuery();
+  
+  // Query para listar toda a produção (não filtrada por mês)
+  const { data: producao } = trpc.producao.listAll.useQuery();
 
-  // Dados mensais consolidados
+  /**
+ * dadosAnuais consolida dados mensais de pagamentos e produção
+ * Inicializa todos os meses do ano com zero
+ * Processa pagamentos para somar salários e descontos
+ * Processa produção para somar faturamento, produção realizada e meta
+ * Converte centavos para reais
+ */
   const dadosAnuais = useMemo(() => {
     if (!pagamentos || !producao) return [];
 
@@ -32,7 +79,7 @@ export default function VisaoAnual() {
       totalMeta: number;
     }> = {};
 
-    // Inicializar todos os meses do ano
+    // Inicializa todos os meses do ano com valores zerados
     for (let i = 1; i <= 12; i++) {
       const mesKey = `${anoSelecionado}-${String(i).padStart(2, '0')}`;
       dadosPorMes[mesKey] = {
@@ -44,7 +91,7 @@ export default function VisaoAnual() {
       };
     }
 
-    // Processar pagamentos
+    // Processa pagamentos: soma salários líquidos e descontos por mês
     pagamentos.forEach((p) => {
       if (p.mes_referencia.startsWith(anoSelecionado)) {
         dadosPorMes[p.mes_referencia].totalSalarios += (p.salario_liquido || 0);
@@ -52,7 +99,7 @@ export default function VisaoAnual() {
       }
     });
 
-    // Processar produção
+    // Processa produção: soma faturamento, produção realizada e meta por mês
     producao.forEach((p) => {
       if (p.mes_referencia.startsWith(anoSelecionado)) {
         dadosPorMes[p.mes_referencia].totalFaturamento += (p.faturamento_mensal || 0);
@@ -62,17 +109,20 @@ export default function VisaoAnual() {
     });
 
     return Object.entries(dadosPorMes).map(([mes, dados]) => ({
-      mes: MESES_NOMES[parseInt(mes.split("-")[1]) - 1],
-      totalSalarios: dados.totalSalarios / 100,
+      mes: MESES_NOMES[parseInt(mes.split("-")[1]) - 1], // Converte mês numérico para nome abreviado
+      totalSalarios: dados.totalSalarios / 100, // Converte centavos para reais
       totalDescontos: dados.totalDescontos / 100,
       totalFaturamento: dados.totalFaturamento / 100,
       totalProducao: dados.totalProducao,
       totalMeta: dados.totalMeta,
-      custoTotal: (dados.totalSalarios + dados.totalDescontos) / 100,
+      custoTotal: (dados.totalSalarios + dados.totalDescontos) / 100, // Custo total de folha
     }));
   }, [pagamentos, producao, anoSelecionado]);
 
-  // Totais anuais
+  /**
+ * totaisAnuais calcula os totais anuais somando todos os meses
+ * Soma salários, descontos, faturamento, produção e custo total
+ */
   const totaisAnuais = useMemo(() => {
     return dadosAnuais.reduce((acc, mes) => ({
       totalSalarios: acc.totalSalarios + mes.totalSalarios,
@@ -86,13 +136,14 @@ export default function VisaoAnual() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
-        {/* Cabeçalho */}
+        {/* Cabeçalho com título e seleção de ano */}
         <div className="border-2 border-border bg-card p-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">VISÃO ANUAL</h1>
               <p className="text-muted-foreground dimension-marker">Consolidação mensal de dados</p>
             </div>
+            {/* Dropdown para seleção de ano */}
             <Select value={anoSelecionado} onValueChange={setAnoSelecionado}>
               <SelectTrigger className="w-48 cad-input">
                 <SelectValue />
@@ -108,33 +159,33 @@ export default function VisaoAnual() {
           </div>
         </div>
 
-        {/* KPIs Anuais */}
+        {/* KPIs Anuais - Cards com totais consolidados */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="cad-card">
+          <div className="glass-card">
             <p className="dimension-marker mb-2">TOTAL SALÁRIOS</p>
             <p className="text-2xl font-bold text-accent">
               R$ {totaisAnuais.totalSalarios.toFixed(2)}
             </p>
           </div>
-          <div className="cad-card">
+          <div className="glass-card">
             <p className="dimension-marker mb-2">TOTAL DESCONTOS</p>
             <p className="text-2xl font-bold text-accent">
               R$ {totaisAnuais.totalDescontos.toFixed(2)}
             </p>
           </div>
-          <div className="cad-card">
+          <div className="glass-card">
             <p className="dimension-marker mb-2">CUSTO TOTAL FOLHA</p>
             <p className="text-2xl font-bold text-accent">
               R$ {totaisAnuais.custoTotal.toFixed(2)}
             </p>
           </div>
-          <div className="cad-card">
+          <div className="glass-card">
             <p className="dimension-marker mb-2">TOTAL FATURAMENTO</p>
             <p className="text-2xl font-bold text-accent">
               R$ {totaisAnuais.totalFaturamento.toFixed(2)}
             </p>
           </div>
-          <div className="cad-card">
+          <div className="glass-card">
             <p className="dimension-marker mb-2">TOTAL PRODUÇÃO</p>
             <p className="text-2xl font-bold text-accent">
               {totaisAnuais.totalProducao} peças
@@ -142,63 +193,63 @@ export default function VisaoAnual() {
           </div>
         </div>
 
-        {/* Gráficos */}
+        {/* Gráficos - Grid com visualizações de evolução mensal */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Evolução de Custos */}
-          <div className="cad-card">
+          {/* Gráfico: Evolução de Custos Mensal */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">EVOLUÇÃO DE CUSTOS MENSAL (R$)</p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={dadosAnuais}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="mes" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
                 <Legend />
-                <Bar dataKey="totalSalarios" fill="#0066cc" name="Salários" />
-                <Bar dataKey="totalDescontos" fill="#003d7a" name="Descontos" />
+                <Bar dataKey="totalSalarios" fill="oklch(0.7 0.25 280)" name="Salários" />
+                <Bar dataKey="totalDescontos" fill="oklch(0.65 0.25 220)" name="Descontos" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Evolução de Faturamento */}
-          <div className="cad-card">
+          {/* Gráfico: Evolução de Faturamento Mensal */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">EVOLUÇÃO DE FATURAMENTO MENSAL (R$)</p>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={dadosAnuais}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="mes" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
                 <Line type="monotone" dataKey="totalFaturamento" stroke="#0066cc" strokeWidth={2} name="Faturamento" />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Evolução de Produção */}
-          <div className="cad-card">
+          {/* Gráfico: Evolução de Produção */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">EVOLUÇÃO DE PRODUÇÃO (peças)</p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={dadosAnuais}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="mes" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
                 <Legend />
-                <Bar dataKey="totalMeta" fill="#003d7a" name="Meta" />
-                <Bar dataKey="totalProducao" fill="#0066cc" name="Realizado" />
+                <Bar dataKey="totalMeta" fill="oklch(0.65 0.25 220)" name="Meta" />
+                <Bar dataKey="totalProducao" fill="oklch(0.7 0.25 280)" name="Realizado" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Custo Total vs Faturamento */}
-          <div className="cad-card">
+          {/* Gráfico: Custo de Folha vs Faturamento */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">CUSTO FOLHA vs FATURAMENTO (R$)</p>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={dadosAnuais}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="mes" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
                 <Legend />
                 <Line type="monotone" dataKey="custoTotal" stroke="#d9534f" strokeWidth={2} name="Custo Folha" />
                 <Line type="monotone" dataKey="totalFaturamento" stroke="#0066cc" strokeWidth={2} name="Faturamento" />
@@ -207,8 +258,8 @@ export default function VisaoAnual() {
           </div>
         </div>
 
-        {/* Tabela Detalhada */}
-        <div className="cad-card overflow-x-auto">
+        {/* Tabela Detalhada - Detalhamento mensal com margem */}
+        <div className="glass-card overflow-x-auto">
           <p className="dimension-marker mb-4">DETALHAMENTO MENSAL</p>
           <table className="w-full text-sm">
             <thead>
@@ -224,7 +275,9 @@ export default function VisaoAnual() {
               </tr>
             </thead>
             <tbody>
+              {/* Mapeia dados anuais para linhas da tabela */}
               {dadosAnuais.map((d, idx) => {
+                // Calcula margem (faturamento - custo total)
                 const margem = d.totalFaturamento - d.custoTotal;
                 return (
                   <tr key={idx} className="border-b border-border hover:bg-accent/10">
@@ -235,6 +288,7 @@ export default function VisaoAnual() {
                     <td className="p-3 text-white">R$ {d.totalFaturamento.toFixed(2)}</td>
                     <td className="p-3 text-white">{d.totalProducao}</td>
                     <td className="p-3 text-white">{d.totalMeta}</td>
+                    {/* Margem em verde se positiva, vermelho se negativa */}
                     <td className={`p-3 text-white ${margem >= 0 ? "text-green-400" : "text-red-400"}`}>
                       R$ {margem.toFixed(2)}
                     </td>

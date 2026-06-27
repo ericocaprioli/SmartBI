@@ -43,76 +43,80 @@
 }
 
 :root {
-  /* Estética CAD/Arquitetônica - Azul Royal Profundo */
-  --primary: oklch(0.35 0.15 260); /* Azul royal */
-  --primary-foreground: oklch(1 0 0); /* Branco */
-  --sidebar-primary: oklch(0.35 0.15 260);
+  /* Dark Glass Gradient - Estilo Premium */
+  --primary: oklch(0.65 0.25 280); /* Roxo vibrante */
+  --primary-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.65 0.25 280);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --chart-1: oklch(0.5 0.15 260);
-  --chart-2: oklch(0.45 0.15 260);
-  --chart-3: oklch(0.4 0.15 260);
-  --chart-4: oklch(0.35 0.15 260);
-  --chart-5: oklch(0.3 0.15 260);
-  --radius: 0rem; /* Sem arredondamento para estética técnica */
-  --background: oklch(0.15 0.08 260); /* Azul royal profundo */
-  --foreground: oklch(1 0 0); /* Branco */
-  --card: oklch(0.12 0.08 260); /* Azul mais escuro */
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0.12 0.08 260);
-  --popover-foreground: oklch(1 0 0);
-  --secondary: oklch(0.25 0.08 260);
-  --secondary-foreground: oklch(0.9 0 0);
-  --muted: oklch(0.25 0.08 260);
-  --muted-foreground: oklch(0.85 0 0);
-  --accent: oklch(0.5 0.15 260); /* Azul brilhante para destaques */
+  --chart-1: oklch(0.7 0.25 280); /* Roxo */
+  --chart-2: oklch(0.65 0.25 220); /* Azul */
+  --chart-3: oklch(0.7 0.25 180); /* Ciano */
+  --chart-4: oklch(0.6 0.25 140); /* Verde */
+  --chart-5: oklch(0.65 0.25 320); /* Rosa */
+  --radius: 1rem; /* Arredondamento suave */
+  --background: oklch(0.12 0.05 260); /* Fundo escuro profundo */
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.15 0.05 260); /* Card escuro */
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.15 0.05 260);
+  --popover-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.2 0.05 260);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.25 0.05 260);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.7 0.25 280); /* Roxo brilhante */
   --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.3 0.08 260); /* Azul para bordas */
-  --input: oklch(0.18 0.08 260); /* Azul para inputs */
-  --ring: oklch(0.5 0.15 260); /* Azul brilhante para focus */
-  --sidebar: oklch(0.12 0.08 260);
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.5 0.15 260);
+  --destructive: oklch(0.55 0.25 25); /* Vermelho vibrante */
+  --destructive-foreground: oklch(0.98 0 0);
+  --success: oklch(0.65 0.25 145); /* Verde vibrante */
+  --success-foreground: oklch(0.98 0 0);
+  --border: oklch(0.3 0.05 260);
+  --input: oklch(0.18 0.05 260);
+  --ring: oklch(0.7 0.25 280);
+  --sidebar: oklch(0.12 0.05 260);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.7 0.25 280);
   --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.3 0.08 260);
-  --sidebar-ring: oklch(0.5 0.15 260);
+  --sidebar-border: oklch(0.3 0.05 260);
+  --sidebar-ring: oklch(0.7 0.25 280);
 }
 
 .dark {
-  /* Mesmo tema para modo dark (já é escuro por padrão) */
-  --primary: oklch(0.35 0.15 260);
+  /* Dark Glass Gradient - Mesmo tema */
+  --primary: oklch(0.65 0.25 280);
   --primary-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.35 0.15 260);
+  --sidebar-primary: oklch(0.65 0.25 280);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --background: oklch(0.15 0.08 260);
-  --foreground: oklch(1 0 0);
-  --card: oklch(0.12 0.08 260);
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0.12 0.08 260);
-  --popover-foreground: oklch(1 0 0);
-  --secondary: oklch(0.25 0.08 260);
-  --secondary-foreground: oklch(0.9 0 0);
-  --muted: oklch(0.25 0.08 260);
-  --muted-foreground: oklch(0.85 0 0);
-  --accent: oklch(0.5 0.15 260);
+  --background: oklch(0.12 0.05 260);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.15 0.05 260);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.15 0.05 260);
+  --popover-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.2 0.05 260);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.25 0.05 260);
+  --muted-foreground: oklch(0.7 0 0);
+  --accent: oklch(0.7 0.25 280);
   --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.3 0.08 260);
-  --input: oklch(0.18 0.08 260);
-  --ring: oklch(0.5 0.15 260);
-  --chart-1: oklch(0.5 0.15 260);
-  --chart-2: oklch(0.45 0.15 260);
-  --chart-3: oklch(0.4 0.15 260);
-  --chart-4: oklch(0.35 0.15 260);
-  --chart-5: oklch(0.3 0.15 260);
-  --sidebar: oklch(0.12 0.08 260);
-  --sidebar-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.5 0.15 260);
+  --destructive: oklch(0.55 0.25 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --success: oklch(0.65 0.25 145);
+  --success-foreground: oklch(0.98 0 0);
+  --border: oklch(0.3 0.05 260);
+  --input: oklch(0.18 0.05 260);
+  --ring: oklch(0.7 0.25 280);
+  --chart-1: oklch(0.7 0.25 280);
+  --chart-2: oklch(0.65 0.25 220);
+  --chart-3: oklch(0.7 0.25 180);
+  --chart-4: oklch(0.6 0.25 140);
+  --chart-5: oklch(0.65 0.25 320);
+  --sidebar: oklch(0.12 0.05 260);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.7 0.25 280);
   --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(0.3 0.08 260);
-  --sidebar-ring: oklch(0.5 0.15 260);
+  --sidebar-border: oklch(0.3 0.05 260);
+  --sidebar-ring: oklch(0.7 0.25 280);
 }
 
 @layer base {
@@ -121,11 +125,21 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    /* Grade de fundo técnica */
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 20px 20px;
+    /* Gradiente animado de fundo */
+    background: linear-gradient(135deg, 
+      oklch(0.12 0.05 260) 0%, 
+      oklch(0.15 0.08 280) 25%, 
+      oklch(0.12 0.05 260) 50%, 
+      oklch(0.15 0.08 220) 75%, 
+      oklch(0.12 0.05 260) 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   /* Tipografia: Sans-serif branca e negrita */
@@ -193,7 +207,135 @@
     }
   }
 
-  /* Componentes técnicos CAD */
+  /* Glassmorphism Cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .glass-card-gradient {
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+                0 0 20px rgba(168, 85, 247, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-gradient:hover {
+    border-color: rgba(168, 85, 247, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 
+                0 0 30px rgba(168, 85, 247, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* Cores críticas */
+  .text-success {
+    color: oklch(0.65 0.25 145);
+  }
+
+  .text-destructive {
+    color: oklch(0.55 0.25 25);
+  }
+
+  .bg-success {
+    background: oklch(0.65 0.25 145);
+  }
+
+  .bg-destructive {
+    background: oklch(0.55 0.25 25);
+  }
+
+  .border-success {
+    border-color: oklch(0.65 0.25 145);
+  }
+
+  .border-destructive {
+    border-color: oklch(0.55 0.25 25);
+  }
+
+  /* Animações */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.2); }
+    50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.4); }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .animate-delay-1 {
+    animation-delay: 0.1s;
+  }
+
+  .animate-delay-2 {
+    animation-delay: 0.2s;
+  }
+
+  .animate-delay-3 {
+    animation-delay: 0.3s;
+  }
+
+  .animate-delay-4 {
+    animation-delay: 0.4s;
+  }
+
+  .animate-delay-5 {
+    animation-delay: 0.5s;
+  }
+
+  /* Títulos com gradiente */
+  .gradient-text {
+    background: linear-gradient(135deg, 
+      oklch(0.7 0.25 280) 0%, 
+      oklch(0.65 0.25 220) 50%, 
+      oklch(0.7 0.25 180) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Componentes técnicos CAD (mantidos para compatibilidade) */
   .cad-input {
     @apply bg-input text-foreground border-2 border-border px-3 py-2;
     font-family: 'Courier New', monospace;
@@ -210,6 +352,32 @@
   .cad-button:hover {
     @apply bg-accent/80;
     transform: scale(0.98);
+  }
+
+  /* Botões com gradiente */
+  .gradient-button {
+    background: linear-gradient(135deg, 
+      oklch(0.7 0.25 280) 0%, 
+      oklch(0.65 0.25 220) 50%, 
+      oklch(0.7 0.25 180) 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+  }
+
+  .gradient-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+  }
+
+  .gradient-button:active {
+    transform: translateY(0);
   }
 
   .cad-card {

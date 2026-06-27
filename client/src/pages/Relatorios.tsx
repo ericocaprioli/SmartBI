@@ -1,9 +1,22 @@
+// Importação de hooks do React para gerenciar estado e memoização
 import { useState, useMemo } from "react";
+
+// Importação do cliente tRPC para chamadas de API
 import { trpc } from "@/lib/trpc";
+
+// Importação de componentes UI
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Importação de componentes de gráficos do Recharts
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+// Importação do layout do dashboard
 import DashboardLayout from "@/components/DashboardLayout";
 
+/**
+ * Lista de meses disponíveis para seleção nos relatórios
+ * Cada objeto contém valor (formato YYYY-MM) e label exibido
+ */
 const MESES = [
   { value: "2026-01", label: "Janeiro 2026" },
   { value: "2026-02", label: "Fevereiro 2026" },
@@ -13,16 +26,48 @@ const MESES = [
   { value: "2026-06", label: "Junho 2026" },
 ];
 
+/**
+ * Paleta de cores em tons de azul para gráficos
+ */
 const CORES = ["#0066cc", "#0052a3", "#003d7a", "#002851", "#001428"];
 
+/**
+ * Relatorios é a página de análise multidimensional de dados
+ * 
+ * Funcionalidades:
+ * - Seleção de mês para análise
+ * - Cálculo de custo de folha por função
+ * - Distribuição de funcionários por situação contratual
+ * - Eficiência de produção por funcionário
+ * - Eficiência média por função
+ * - Gráficos de barra e pizza para visualização
+ * - Tabelas detalhadas com dados cruzados
+ * - Conversão de valores de centavos para reais na exibição
+ * 
+ * Cálculos realizados:
+ * - Custo total por função (salário líquido + INSS + descontos)
+ * - Distribuição por situação contratual
+ * - Eficiência por funcionário (realizado / meta * 100)
+ * - Eficiência média por função (média das eficiências)
+ */
 export default function Relatorios() {
+  // Estado para mês selecionado (padrão: junho 2026)
   const [mesSelecionado, setMesSelecionado] = useState("2026-06");
   
+  // Query para listar pagamentos do mês selecionado
   const { data: pagamentos } = trpc.pagamentos.listByMes.useQuery(mesSelecionado);
+  
+  // Query para listar funcionários
   const { data: funcionarios } = trpc.funcionarios.list.useQuery();
+  
+  // Query para listar produção do mês selecionado
   const { data: producao } = trpc.producao.listByMes.useQuery(mesSelecionado);
 
-  // Custo de folha por função
+  /**
+ * custoPorFuncao calcula o custo total de folha por função
+ * Soma salário líquido, INSS e descontos diversos por função
+ * Converte centavos para reais
+ */
   const custoPorFuncao = useMemo(() => {
     if (!pagamentos || !funcionarios) return [];
     const custoMap: Record<string, number> = {};
@@ -30,6 +75,7 @@ export default function Relatorios() {
     pagamentos.forEach((p) => {
       const func = funcionarios.find((f) => f.id === p.funcionario_id);
       if (func) {
+        // Custo total = salário líquido + INSS + descontos diversos
         const custoTotal = (p.salario_liquido || 0) + (p.inss || 0) + (p.desconto_diversos || 0);
         custoMap[func.funcao] = (custoMap[func.funcao] || 0) + custoTotal;
       }
@@ -37,11 +83,14 @@ export default function Relatorios() {
 
     return Object.entries(custoMap).map(([funcao, custo]) => ({
       funcao,
-      custo: custo / 100,
+      custo: custo / 100, // Converte centavos para reais
     }));
   }, [pagamentos, funcionarios]);
 
-  // Distribuição por situação
+  /**
+ * distribuicaoSituacao calcula a distribuição de funcionários por situação contratual
+ * Conta quantos funcionários em cada situação
+ */
   const distribuicaoSituacao = useMemo(() => {
     if (!funcionarios) return [];
     const dist: Record<string, number> = {};
@@ -56,7 +105,10 @@ export default function Relatorios() {
     }));
   }, [funcionarios]);
 
-  // Eficiência de produção por funcionário
+  /**
+ * eficienciaPorFuncionario calcula a eficiência de produção por funcionário
+ * Eficiência = (realizado / meta) * 100
+ */
   const eficienciaPorFuncionario = useMemo(() => {
     if (!producao || !funcionarios) return [];
     
@@ -74,7 +126,10 @@ export default function Relatorios() {
     });
   }, [producao, funcionarios]);
 
-  // Eficiência média por função
+  /**
+ * eficienciaPorFuncao calcula a eficiência média por função
+ * Calcula a média das eficiências de todos os funcionários de cada função
+ */
   const eficienciaPorFuncao = useMemo(() => {
     if (!eficienciaPorFuncionario) return [];
     const eficienciaMap: Record<string, { soma: number; count: number }> = {};
@@ -96,13 +151,14 @@ export default function Relatorios() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
-        {/* Cabeçalho */}
+        {/* Cabeçalho com título e seleção de mês */}
         <div className="border-2 border-border bg-card p-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">RELATÓRIOS CRUZADOS</h1>
               <p className="text-muted-foreground dimension-marker">Análise multidimensional de dados</p>
             </div>
+            {/* Dropdown para seleção de mês */}
             <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
               <SelectTrigger className="w-48 cad-input">
                 <SelectValue />
@@ -118,24 +174,24 @@ export default function Relatorios() {
           </div>
         </div>
 
-        {/* Gráficos */}
+        {/* Gráficos - Grid com visualizações de dados cruzados */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Custo de Folha por Função */}
-          <div className="cad-card">
+          {/* Gráfico: Custo de Folha por Função */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">CUSTO DE FOLHA POR FUNÇÃO (R$)</p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={custoPorFuncao}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="funcao" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
-                <Bar dataKey="custo" fill="#0066cc" name="Custo (R$)" />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
+                <Bar dataKey="custo" fill="oklch(0.7 0.25 280)" name="Custo (R$)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Distribuição por Situação */}
-          <div className="cad-card">
+          {/* Gráfico: Distribuição por Situação Contratual */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">DISTRIBUIÇÃO POR SITUAÇÃO CONTRATUAL</p>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -153,44 +209,44 @@ export default function Relatorios() {
                     <Cell key={`cell-${index}`} fill={CORES[index % CORES.length]} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Eficiência por Funcionário */}
-          <div className="cad-card">
+          {/* Gráfico: Eficiência por Funcionário */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">EFICIÊNCIA DE PRODUÇÃO POR FUNCIONÁRIO (%)</p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={eficienciaPorFuncionario}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="nome" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
-                <Bar dataKey="eficiencia" fill="#0066cc" name="Eficiência (%)" />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
+                <Bar dataKey="eficiencia" fill="oklch(0.7 0.25 280)" name="Eficiência (%)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Eficiência Média por Função */}
-          <div className="cad-card">
+          {/* Gráfico: Eficiência Média por Função */}
+          <div className="glass-card">
             <p className="dimension-marker mb-4">EFICIÊNCIA MÉDIA POR FUNÇÃO (%)</p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={eficienciaPorFuncao}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis dataKey="funcao" stroke="rgba(255,255,255,0.5)" />
                 <YAxis stroke="rgba(255,255,255,0.5)" />
-                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid #0066cc" }} />
-                <Bar dataKey="eficiencia" fill="#003d7a" name="Eficiência Média (%)" />
+                <Tooltip contentStyle={{ backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(168, 85, 247, 0.5)" }} />
+                <Bar dataKey="eficiencia" fill="oklch(0.65 0.25 220)" name="Eficiência Média (%)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Tabelas Resumo */}
+        {/* Tabelas Resumo - Detalhamento dos dados cruzados */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Tabela Custo por Função */}
-          <div className="cad-card overflow-x-auto">
+          {/* Tabela: Custo por Função */}
+          <div className="glass-card overflow-x-auto">
             <p className="dimension-marker mb-4">DETALHE: CUSTO POR FUNÇÃO</p>
             <table className="w-full text-sm">
               <thead>
@@ -210,8 +266,8 @@ export default function Relatorios() {
             </table>
           </div>
 
-          {/* Tabela Eficiência por Função */}
-          <div className="cad-card overflow-x-auto">
+          {/* Tabela: Eficiência por Função */}
+          <div className="glass-card overflow-x-auto">
             <p className="dimension-marker mb-4">DETALHE: EFICIÊNCIA POR FUNÇÃO</p>
             <table className="w-full text-sm">
               <thead>
