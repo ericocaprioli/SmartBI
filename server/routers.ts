@@ -19,6 +19,7 @@ import {
   getFuncionarioById,
   createFuncionario,
   updateFuncionario,
+  deleteFuncionario,
   getPagamentosByMes,
   getPagamentoByFuncionarioAndMes,
   createPagamento,
@@ -150,6 +151,17 @@ export const appRouter = router({
       .input(z.object({ csvContent: z.string() }))
       .mutation(async ({ input }) => {
         return await importFuncionariosCSV(input.csvContent);
+      }),
+    
+    /**
+     * Exclui um funcionário (soft delete)
+     * @param input - ID do funcionário
+     * @returns Resultado da exclusão
+     */
+    delete: publicProcedure
+      .input(z.number())
+      .mutation(async ({ input }) => {
+        return await deleteFuncionario(input);
       }),
   }),
 

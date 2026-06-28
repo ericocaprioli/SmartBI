@@ -17,8 +17,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 // Importação do toast para notificações
 import { toast } from "sonner";
 
-// Importação do ícone Upload do Lucide React
-import { Upload } from "lucide-react";
+// Importação dos ícones Upload e Trash do Lucide React
+import { Upload, Trash2 } from "lucide-react";
 
 /**
  * Funcionários é a página de gerenciamento de funcionários
@@ -64,6 +64,9 @@ export default function Funcionarios() {
   
   // Mutation para importar funcionários de CSV
   const importMutation = trpc.funcionarios.importCSV.useMutation();
+  
+  // Mutation para excluir funcionário
+  const deleteMutation = trpc.funcionarios.delete.useMutation();
 
   /**
    * handleSubmit processa o formulário de criação de funcionário
@@ -148,6 +151,35 @@ export default function Funcionarios() {
     };
     // Lê arquivo como texto
     reader.readAsText(file);
+  };
+
+  /**
+   * handleDelete processa exclusão de funcionário
+   * 
+   * Processo:
+   * 1. Confirma exclusão com usuário
+   * 2. Chama mutation de exclusão (soft delete)
+   * 3. Exibe mensagem de sucesso
+   * 4. Recarrega lista de funcionários
+   * 
+   * @param id - ID do funcionário a excluir
+   * @param nome - Nome do funcionário para confirmação
+   */
+  const handleDelete = async (id: number, nome: string) => {
+    // Confirma exclusão com usuário
+    if (!confirm(`Tem certeza que deseja excluir o funcionário "${nome}"?`)) {
+      return;
+    }
+
+    try {
+      // Chama mutation de exclusão
+      await deleteMutation.mutateAsync(id);
+      toast.success("Funcionário excluído com sucesso");
+      // Recarrega lista
+      refetch();
+    } catch (error) {
+      toast.error("Erro ao excluir funcionário");
+    }
   };
 
   return (
@@ -279,6 +311,7 @@ export default function Funcionarios() {
                 <th className="text-left p-3 dimension-marker">FORMA PGTO</th>
                 <th className="text-left p-3 dimension-marker">PIX</th>
                 <th className="text-left p-3 dimension-marker">SALÁRIO BASE</th>
+                <th className="text-left p-3 dimension-marker">AÇÕES</th>
               </tr>
             </thead>
             <tbody>
@@ -293,6 +326,18 @@ export default function Funcionarios() {
                   <td className="p-3 text-white">{f.pix ?? "-"}</td>
                   {/* Converte centavos para reais (divide por 100) */}
                   <td className="p-3 text-white">R$ {(f.salario_base / 100).toFixed(2)}</td>
+                  {/* Botão de exclusão */}
+                  <td className="p-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(f.id, f.nome)}
+                      disabled={deleteMutation.isPending}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>

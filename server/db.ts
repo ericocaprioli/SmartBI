@@ -234,6 +234,25 @@ export async function updateFuncionario(id: number, data: Partial<InsertFunciona
   return await db.update(funcionarios).set(data).where(eq(funcionarios.id, id));
 }
 
+/**
+ * deleteFuncionario exclui um funcionário (soft delete)
+ * 
+ * Funcionalidades:
+ * - Marca funcionário como inativo (ativo=0)
+ * - Não remove dados do banco, apenas desativa
+ * - Mantém histórico de pagamentos e produção
+ * 
+ * @param id - ID do funcionário
+ * @returns Resultado da atualização
+ * @throws Error se banco não estiver disponível
+ */
+export async function deleteFuncionario(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // Soft delete: marca ativo como 0 em vez de remover o registro
+  return await db.update(funcionarios).set({ ativo: 0 }).where(eq(funcionarios.id, id));
+}
+
 // ==================== PAGAMENTOS ====================
 
 /**
