@@ -327,22 +327,27 @@ export default function Producao() {
             <thead>
               <tr className="border-b-2 border-border">
                 <th className="text-left p-3 dimension-marker">FUNCIONÁRIO</th>
+                <th className="text-left p-3 dimension-marker">DIAS TRABALHADOS</th>
                 <th className="text-left p-3 dimension-marker">META DIA</th>
                 <th className="text-left p-3 dimension-marker">META MÊS</th>
                 <th className="text-left p-3 dimension-marker">VALOR/PEÇA</th>
                 <th className="text-left p-3 dimension-marker">REALIZADO</th>
                 <th className="text-left p-3 dimension-marker">FATURAMENTO</th>
                 <th className="text-left p-3 dimension-marker">EFICIÊNCIA</th>
+                <th className="text-left p-3 dimension-marker">PRODUÇÃO (%)</th>
+                <th className="text-left p-3 dimension-marker">SALDO</th>
+                <th className="text-left p-3 dimension-marker">EFICIÊNCIA ACUMULADA</th>
               </tr>
             </thead>
             <tbody>
               {/* Mapeia produção para linhas da tabela */}
               {producao?.map((p) => {
                 // Calcula eficiência (realizado / meta * 100)
-                const eficiencia = (p.meta_mes ?? 0) > 0 ? (((p.producao_realizada ?? 0) / (p.meta_mes ?? 0)) * 100).toFixed(1) : "0";
+                const eficiencia = (p.meta_dia ?? 0) > 0 ? (((p.producao_realizada ?? 0) / (p.meta_dia ?? 0)) * 100).toFixed(1) : "0";
                 return (
                   <tr key={p.id} className="border-b border-border hover:bg-accent/10">
                     <td className="p-3 text-white">{getFuncionarioNome(p.funcionario_id)}</td>
+                    <td className="p-3 text-white">{p.dias_trabalhados || 0}</td>
                     <td className="p-3 text-white">{p.meta_dia || 0}</td>
                     <td className="p-3 text-white">{p.meta_mes || 0}</td>
                     {/* Converte centavos para reais */}
@@ -352,6 +357,12 @@ export default function Producao() {
                     <td className="p-3 text-white">R$ {((p.faturamento_mensal ?? 0) / 100).toFixed(2)}</td>
                     {/* Exibe eficiência em porcentagem */}
                     <td className="p-3 text-white">{eficiencia}%</td>
+                    {/* Exibe produção percentual */}
+                    <td className="p-3 text-white">{p.producao_percentual || 0}%</td>
+                    {/* Exibe saldo (pode ser negativo) */}
+                    <td className="p-3 text-white">{p.saldo || 0}</td>
+                    {/* Exibe eficiência acumulada */}
+                    <td className="p-3 text-white">{p.eficiencia_acumulada || 0}%</td>
                   </tr>
                 );
               })}
