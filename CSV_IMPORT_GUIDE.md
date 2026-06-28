@@ -19,27 +19,27 @@ Este guia explica como formatar corretamente os arquivos CSV para importação n
 |--------|------|-----------|---------|
 | nome | Texto | Nome completo do funcionário | João Silva |
 | funcao | Texto | Cargo/função do funcionário | Operador |
-| setor | Texto | Setor de atuação | Produção |
+| situacao | Texto | Situação contratual (CLT, Contrato, Experiência) | CLT |
+| forma_pagamento | Texto | Forma de pagamento (Pix, Transferência, etc.) | Pix |
+| pix | Texto | Chave PIX para pagamento (opcional) | 12345678900 |
 | salario_base | Decimal | Salário base em reais | 2500.00 |
-| data_admissao | Data | Data de admissão (YYYY-MM-DD) | 2024-01-15 |
-| situacao | Texto | Situação contratual | Ativo |
-| ativo | Número | 1 para ativo, 0 para inativo | 1 |
 
 ### Exemplo de Arquivo CSV
 
 ```csv
-nome,funcao,setor,salario_base,data_admissao,situacao,ativo
-João Silva,Operador,Produção,2500.00,2024-01-15,Ativo,1
-Maria Santos,Supervisor,Qualidade,3500.00,2023-06-10,Ativo,1
-Pedro Costa,Auxiliar,Logística,2200.00,2024-03-20,Ativo,1
+nome,funcao,situacao,forma_pagamento,pix,salario_base
+João Silva,Operador,CLT,Pix,12345678900,2500.00
+Maria Santos,Supervisor,Contrato,Pix,98765432100,3500.00
+Pedro Costa,Auxiliar,Experiência,Pix,55555555500,2200.00
 ```
 
 ### Observações
 
 - **salario_base**: Deve ser em reais com duas casas decimais
-- **data_admissao**: Deve estar no formato YYYY-MM-DD
-- **situacao**: Valores comuns: Ativo, Afastado, Férias, Demitido
-- **ativo**: 1 = funcionário ativo, 0 = inativo
+- **situacao**: Valores aceitos: CLT, Contrato, Experiência
+- **forma_pagamento**: Exemplos: Pix, Transferência, Dinheiro
+- **pix**: Campo opcional, pode ser deixado em branco
+- O sistema gera automaticamente o ID e marca como ativo
 
 ---
 

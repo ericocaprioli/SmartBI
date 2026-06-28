@@ -216,7 +216,7 @@ export default function Funcionarios() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    O CSV deve conter as colunas: nome, funcao, setor, salario_base, data_admissao, situacao, ativo
+                    O CSV deve conter as colunas: nome, funcao, situacao, forma_pagamento, pix, salario_base
                   </p>
                   <Button
                     className="gradient-button w-full mt-2"
