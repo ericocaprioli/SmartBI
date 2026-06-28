@@ -32,7 +32,7 @@ import { getLoginUrl, isAuthConfigured } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 
 // Importações de ícones Lucide React para a interface
-import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Factory, BarChart3, CalendarDays } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Factory, BarChart3, CalendarDays, TrendingUp } from "lucide-react";
 
 // Importações de React para gerenciamento de estado e efeitos
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -56,6 +56,7 @@ const menuItems = [
   { icon: BarChart3, label: "Dashboard Produção", path: "/dashboard-producao" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
   { icon: CalendarDays, label: "Visão Anual", path: "/visao-anual" },
+  { icon: TrendingUp, label: "Cotações", path: "/cotacoes" },
 ];
 
 // Constantes para gerenciamento da largura da sidebar

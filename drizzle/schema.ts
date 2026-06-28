@@ -348,3 +348,77 @@ export type Producao = typeof producao.$inferSelect;
  * Representa dados para inserir um novo registro de produção
  */
 export type InsertProducao = typeof producao.$inferInsert;
+
+/**
+ * Tabela cotacoes - Armazena histórico de cotações de commodities e moedas
+ * 
+ * Funcionalidades:
+ * - Registro de cotações de dólar, algodão e diesel
+ * - Histórico atualizado 2x por dia via APIs externas (yfinance/AwesomeAPI)
+ * - Permite gráficos de tendência e análise de variação
+ * - Cada coleta gera um novo registro (mantém histórico completo)
+ * 
+ * Fontes de dados:
+ * - Dólar: AwesomeAPI (USD-BRL)
+ * - Algodão: Yahoo Finance (CT=F - Cotton Futures)
+ * - Diesel: Yahoo Finance (HO=F - Heating Oil como proxy)
+ */
+export const cotacoes = sqliteTable("cotacoes", {
+  /** Chave primária auto-incrementada */
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  
+  /**
+   * Tipo da cotação
+   * Valores: "dolar", "algodao", "diesel"
+   */
+  tipo: text("tipo", { enum: ["dolar", "algodao", "diesel"] }).notNull(),
+  
+  /** Nome amigável da cotação (ex: "Dólar Comercial", "Algodão") */
+  nome: text("nome").notNull(),
+  
+  /**
+   * Valor da cotação
+   * Armazenado em centavos (multiplicado por 100) para precisão
+   */
+  valor: integer("valor").notNull(),
+  
+  /** Unidade de medida original (ex: "BRL", "USX/lb", "USD/gal") */
+  unidade: text("unidade").notNull(),
+  
+  /**
+   * Valor convertido para reais (BRL)
+   * Armazenado em centavos
+   * - Dólar: igual ao valor original
+   * - Algodão: R$/kg (convertido de USD¢/lb usando o dólar do momento)
+   * - Diesel: R$/litro (convertido de USD/galão usando o dólar do momento)
+   */
+  valor_brl: integer("valor_brl").default(0),
+  
+  /** Unidade da conversão em reais (ex: "BRL", "R$/kg", "R$/L") */
+  unidade_brl: text("unidade_brl"),
+  
+  /**
+   * Variação percentual em relação à coleta anterior
+   * Armazenado multiplicado por 100 (ex: 250 = 2,50%)
+   * Pode ser negativo
+   */
+  variacao: integer("variacao").default(0),
+  
+  /** Fonte dos dados (ex: "AwesomeAPI", "Yahoo Finance") */
+  fonte: text("fonte"),
+  
+  /** Timestamp da coleta da cotação */
+  coletado_em: integer("coletado_em", { mode: "timestamp" }).defaultNow().notNull(),
+});
+
+/**
+ * Tipo Cotacao inferido da tabela cotacoes
+ * Representa uma cotação selecionada do banco
+ */
+export type Cotacao = typeof cotacoes.$inferSelect;
+
+/**
+ * Tipo InsertCotacao inferido da tabela cotacoes
+ * Representa dados para inserir uma nova cotação
+ */
+export type InsertCotacao = typeof cotacoes.$inferInsert;

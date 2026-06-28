@@ -28,6 +28,7 @@ import Producao from "./pages/Producao";
 import DashboardProducao from "./pages/DashboardProducao";
 import Relatorios from "./pages/Relatorios";
 import VisaoAnual from "./pages/VisaoAnual";
+import Cotacoes from "./pages/Cotacoes";
 
 /**
  * Router define as rotas da aplicação usando Wouter
@@ -55,6 +56,7 @@ function Router() {
       <Route path={"/dashboard-producao"} component={DashboardProducao} />
       <Route path={"/relatorios"} component={Relatorios} />
       <Route path={"/visao-anual"} component={VisaoAnual} />
+      <Route path={"/cotacoes"} component={Cotacoes} />
       
       {/* Rota 404 explícita */}
       <Route path={"/404"} component={NotFound} />

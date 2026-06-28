@@ -23,6 +23,16 @@ SmartBi é um sistema completo para gestão de folha de pagamento e controle de 
 - Cálculo de faturamento mensal
 - Análise de eficiência (realizado vs meta)
 - Dashboard visual com métricas de produtividade
+- Cálculo de dias trabalhados, eficiência acumulada e saldo
+
+### Cotações de Mercado
+- Atualização automática de cotações (dólar, algodão, diesel)
+- Coleta de dados via APIs externas (AwesomeAPI, Yahoo Finance)
+- Atualização programada 2x ao dia
+- Conversão automática para reais (R$/kg para algodão, R$/L para diesel)
+- Histórico de preços com gráficos de tendência
+- Cálculo de variação percentual
+- Botão de atualização manual
 
 ### Relatórios e Análises
 - Dashboard consolidado com KPIs principais
@@ -90,6 +100,7 @@ pnpm start
 - **Funcionários**: Gestão de cadastro de funcionários
 - **Pagamentos**: Folha de pagamento mensal
 - **Produção**: Controle de produção e metas
+- **Cotações**: Cotações de mercado (dólar, algodão, diesel)
 - **Relatórios**: Análises cruzadas de dados
 - **Visão Anual**: Consolidação anual de métricas
 
@@ -111,6 +122,7 @@ O sistema utiliza SQLite como banco de dados local, com as seguintes tabelas:
 - **funcionarios**: Cadastro de funcionários
 - **pagamentos**: Dados de folha de pagamento
 - **producao**: Dados de produção e metas
+- **cotacoes**: Histórico de cotações de mercado (dólar, algodão, diesel)
 
 ## 🎯 Casos de Uso
 
@@ -131,6 +143,8 @@ O sistema utiliza SQLite como banco de dados local, com as seguintes tabelas:
 - Acompanhar realização diária e mensal
 - Calcular faturamento por produção
 - Identificar gargalos na linha de produção
+- Acompanhar cotações de mercado relevantes (algodão, diesel)
+- Monitorar variação cambial do dólar
 
 ## 🔒 Segurança
 

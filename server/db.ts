@@ -1,5 +1,5 @@
 // Importação de operadores do Drizzle ORM para consultas
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 // Importação do Drizzle ORM para SQL.js (SQLite in-memory)
 import { drizzle } from "drizzle-orm/sql-js";
@@ -8,7 +8,7 @@ import { drizzle } from "drizzle-orm/sql-js";
 import initSqlJs from 'sql.js';
 
 // Importação de schemas e tipos do Drizzle
-import { InsertUser, users, funcionarios, InsertFuncionario, pagamentos, InsertPagamento, producao, InsertProducao } from "../drizzle/schema";
+import { InsertUser, users, funcionarios, InsertFuncionario, pagamentos, InsertPagamento, producao, InsertProducao, cotacoes, InsertCotacao } from "../drizzle/schema";
 
 // Importação de variáveis de ambiente
 import { ENV } from './_core/env';
@@ -583,4 +583,86 @@ export async function importProducaoCSV(csvContent: string) {
     }
   }
   return results;
+}
+
+// ==================== COTAÇÕES ====================
+
+/**
+ * insertCotacao insere uma nova cotação no histórico
+ * 
+ * @param data - Dados da cotação (tipo, nome, valor, unidade, variacao, fonte)
+ * @returns Resultado da inserção
+ * @throws Error se banco não estiver disponível
+ */
+export async function insertCotacao(data: InsertCotacao) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(cotacoes).values(data);
+  return result;
+}
+
+/**
+ * getLatestCotacoes retorna a cotação mais recente de cada tipo
+ * 
+ * Funcionalidades:
+ * - Busca todas as cotações ordenadas por data (mais recentes primeiro)
+ * - Retorna apenas o registro mais recente de cada tipo (dolar, algodao, diesel)
+ * 
+ * @returns Array com a última cotação de cada tipo
+ */
+export async function getLatestCotacoes() {
+  const db = await getDb();
+  if (!db) return [];
+  // Busca todas as cotações ordenadas por data decrescente
+  const todas = await db.select().from(cotacoes).orderBy(desc(cotacoes.coletado_em));
+  // Filtra apenas o registro mais recente de cada tipo
+  const vistos = new Set<string>();
+  const ultimas = [];
+  for (const c of todas) {
+    if (!vistos.has(c.tipo)) {
+      vistos.add(c.tipo);
+      ultimas.push(c);
+    }
+  }
+  return ultimas;
+}
+
+/**
+ * getCotacoesByTipo retorna o histórico de cotações de um tipo específico
+ * 
+ * @param tipo - Tipo da cotação (dolar, algodao, diesel)
+ * @param limit - Número máximo de registros (padrão: 60)
+ * @returns Array de cotações ordenadas por data (mais antigas primeiro para gráficos)
+ */
+export async function getCotacoesByTipo(tipo: "dolar" | "algodao" | "diesel", limit: number = 60) {
+  const db = await getDb();
+  if (!db) return [];
+  // Busca cotações do tipo, mais recentes primeiro, limitado
+  const result = await db
+    .select()
+    .from(cotacoes)
+    .where(eq(cotacoes.tipo, tipo))
+    .orderBy(desc(cotacoes.coletado_em))
+    .limit(limit);
+  // Inverte para ordem cronológica (mais antigas primeiro) para exibição em gráficos
+  return result.reverse();
+}
+
+/**
+ * getUltimaCotacaoPorTipo retorna a última cotação registrada de um tipo
+ * Usada para calcular variação percentual ao coletar nova cotação
+ * 
+ * @param tipo - Tipo da cotação
+ * @returns Última cotação do tipo ou undefined
+ */
+export async function getUltimaCotacaoPorTipo(tipo: "dolar" | "algodao" | "diesel") {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(cotacoes)
+    .where(eq(cotacoes.tipo, tipo))
+    .orderBy(desc(cotacoes.coletado_em))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
 }

@@ -117,8 +117,29 @@ function createTables(db: any) {
       valor_peca INTEGER,
       producao_realizada INTEGER DEFAULT 0,
       faturamento_mensal INTEGER DEFAULT 0,
+      dias_trabalhados INTEGER DEFAULT 0,
+      eficiencia INTEGER DEFAULT 0,
+      producao_percentual INTEGER DEFAULT 0,
+      saldo INTEGER DEFAULT 0,
+      eficiencia_acumulada INTEGER DEFAULT 0,
       criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    )
+  `);
+
+  // Cria tabela de cotações (dólar, algodão, diesel)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS cotacoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tipo TEXT NOT NULL,
+      nome TEXT NOT NULL,
+      valor INTEGER NOT NULL,
+      unidade TEXT NOT NULL,
+      valor_brl INTEGER DEFAULT 0,
+      unidade_brl TEXT,
+      variacao INTEGER DEFAULT 0,
+      fonte TEXT,
+      coletado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
     )
   `);
 

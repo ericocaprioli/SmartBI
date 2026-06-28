@@ -32,6 +32,8 @@ import {
   importFuncionariosCSV,
   importPagamentosCSV,
   importProducaoCSV,
+  getLatestCotacoes,
+  getCotacoesByTipo,
 } from "./db";
 
 // Importação de schemas do Drizzle para tabelas
@@ -39,6 +41,9 @@ import { pagamentos, producao } from "../drizzle/schema";
 
 // Importação da função para obter conexão com banco de dados
 import { getDb } from "./db";
+
+// Importação do serviço de coleta de cotações
+import { collectCotacoes } from "./cotacoes";
 
 /**
  * appRouter é o router principal do tRPC
@@ -374,6 +379,37 @@ export const appRouter = router({
      */
     getKPIs: publicProcedure.input(z.string()).query(async ({ input }) => {
       return await getKPIsDashboard(input);
+    }),
+  }),
+
+  // Rotas de cotações (dólar, algodão, diesel)
+  cotacoes: router({
+    /**
+     * Retorna a cotação mais recente de cada tipo (dólar, algodão, diesel)
+     * @returns Array com a última cotação de cada tipo
+     */
+    latest: publicProcedure.query(async () => {
+      return await getLatestCotacoes();
+    }),
+
+    /**
+     * Retorna o histórico de cotações de um tipo específico
+     * @param input - Tipo da cotação (dolar, algodao, diesel)
+     * @returns Array de cotações em ordem cronológica
+     */
+    history: publicProcedure
+      .input(z.enum(["dolar", "algodao", "diesel"]))
+      .query(async ({ input }) => {
+        return await getCotacoesByTipo(input);
+      }),
+
+    /**
+     * Dispara uma coleta manual de cotações
+     * Útil para atualizar imediatamente sem esperar o agendador
+     * @returns Resumo da coleta (sucessos e falhas)
+     */
+    refresh: publicProcedure.mutation(async () => {
+      return await collectCotacoes();
     }),
   }),
 });
