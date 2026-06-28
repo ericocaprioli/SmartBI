@@ -66,6 +66,27 @@ Pedro Costa,Auxiliar,Experiência,Pix,55555555500,2200.00
 | terco_ferias | Número | Terço de férias em centavos | 0 |
 | decimo_terceiro | Número | 13º salário em centavos | 0 |
 
+### Correspondência com Planilha
+
+| Coluna do Sistema | Coluna da Planilha |
+|-------------------|-------------------|
+| funcionario_id | Qtdd Func |
+| mes_referencia | Mês Referência |
+| dias_trabalhados | Dias Trabalhados |
+| salario_base_mes | Salário Base |
+| valor_dia | Valor R$ Dia |
+| salario_bruto | Salário |
+| salario_familia | Salário Família |
+| premio_producao | Prêmio Produção |
+| premio_assiduidade | Prêmio Assiduidade |
+| hora_extra | Hora Extra |
+| inss | INSS |
+| desconto_diversos | Desconto |
+| salario_liquido | Salário Líquido |
+| ferias | Férias |
+| terco_ferias | 1/3 Férias |
+| decimo_terceiro | 13º Salário |
+
 ### Exemplo de Arquivo CSV
 
 ```csv
@@ -76,10 +97,11 @@ funcionario_id,mes_referencia,dias_trabalhados,salario_base_mes,valor_dia,salari
 
 ### Observações Importantes
 
-- **funcionario_id**: Deve corresponder a um funcionário cadastrado no sistema
+- **funcionario_id**: Deve corresponder a um funcionário cadastrado no sistema (obtido do cadastro de funcionários)
 - **Valores monetários**: Em CENTAVOS (250000 = R$ 2.500,00)
 - **mes_referencia**: Formato YYYY-MM (2026-06 = junho de 2026)
 - **Campos opcionais**: Podem ser 0 se não aplicável
+- **Nome do funcionário**: Não é usado no CSV, apenas o ID
 
 ---
 

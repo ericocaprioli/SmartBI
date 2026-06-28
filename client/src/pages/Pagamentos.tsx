@@ -273,6 +273,9 @@ export default function Pagamentos() {
                   <p className="text-xs text-muted-foreground">
                     O CSV deve conter as colunas: funcionario_id, mes_referencia, dias_trabalhados, salario_base_mes, valor_dia, salario_bruto, salario_familia, premio_producao, premio_assiduidade, hora_extra, inss, desconto_diversos, salario_liquido, ferias, terco_ferias, decimo_terceiro
                   </p>
+                  <p className="text-xs text-muted-foreground">
+                    Correspondência: Qtdd Func, Mês Referência, Dias Trabalhados, Salário Base, Valor R$ Dia, Salário, Salário Família, Prêmio Produção, Prêmio Assiduidade, Hora Extra, INSS, Desconto, Salário Líquido, Férias, 1/3 Férias, 13º Salário
+                  </p>
                   <Button
                     className="gradient-button w-full mt-2"
                     variant="outline"
