@@ -242,7 +242,7 @@ export default function Producao() {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    O CSV deve conter as colunas: funcionario_id, mes_referencia, meta_dia, meta_mes, valor_peca, producao_realizada, faturamento_mensal
+                    O CSV deve conter as colunas: funcionario_id, mes_referencia, meta_dia, meta_mes, valor_peca, producao_realizada, faturamento_mensal, dias_trabalhados, eficiencia, producao_percentual, saldo, eficiencia_acumulada
                   </p>
                   <Button
                     className="gradient-button w-full mt-2"

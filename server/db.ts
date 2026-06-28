@@ -570,6 +570,11 @@ export async function importProducaoCSV(csvContent: string) {
         valor_peca: Math.round(parseFloat(row.valor_peca || '0') * 100),
         producao_realizada: parseInt(row.producao_realizada || '0'),
         faturamento_mensal: Math.round(parseFloat(row.faturamento_mensal || '0') * 100),
+        dias_trabalhados: parseInt(row.dias_trabalhados || '0'),
+        eficiencia: parseInt(row.eficiencia || '0'),
+        producao_percentual: parseInt(row.producao_percentual || '0'),
+        saldo: parseInt(row.saldo || '0'),
+        eficiencia_acumulada: parseInt(row.eficiencia_acumulada || '0'),
       };
       const result = await db.insert(producao).values(data);
       results.push({ success: true, data });

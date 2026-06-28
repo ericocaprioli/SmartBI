@@ -113,26 +113,52 @@ funcionario_id,mes_referencia,dias_trabalhados,salario_base_mes,valor_dia,salari
 |--------|------|-----------|---------|
 | funcionario_id | Número | ID do funcionário (deve existir no sistema) | 1 |
 | mes_referencia | Texto | Mês de referência (YYYY-MM) | 2026-06 |
-| meta_dia | Número | Meta diária de produção | 100 |
-| meta_mes | Número | Meta mensal de produção | 3000 |
-| valor_peca | Número | Valor por peça em centavos | 1500 |
-| producao_realizada | Número | Produção realizada no mês | 2500 |
-| faturamento_mensal | Número | Faturamento mensal em centavos | 3750000 |
+| meta_dia | Número | Meta diária de produção | 750 |
+| meta_mes | Número | Meta mensal de produção | 16500 |
+| valor_peca | Número | Valor por peça em centavos | 100 |
+| producao_realizada | Número | Produção realizada no mês | 15016 |
+| faturamento_mensal | Número | Faturamento mensal em centavos | 1501600 |
+| dias_trabalhados | Número | Dias trabalhados no mês | 22 |
+| eficiencia | Número | Eficiência diária (realizado / meta_dia * 100) | 2003 |
+| producao_percentual | Número | Percentual de produção acumulada | 91 |
+| saldo | Número | Saldo de produção (realizado - meta) | 1484 |
+| eficiencia_acumulada | Número | Eficiência acumulada no mês | 91 |
+
+### Correspondência com Planilha Oficial
+
+| Coluna do Sistema | Coluna da Planilha |
+|-------------------|-------------------|
+| funcionario_id | Qtdd Func |
+| mes_referencia | Mês Referência |
+| meta_dia | Meta Dia |
+| meta_mes | Meta Mês |
+| valor_peca | Valor Peça |
+| producao_realizada | Realizado |
+| faturamento_mensal | Faturamento Mensal |
+| dias_trabalhados | Dias Trabalhados |
+| eficiencia | Eficiência |
+| producao_percentual | Produção (%) |
+| saldo | Saldo |
+| eficiencia_acumulada | Eficiência Acumulada |
 
 ### Exemplo de Arquivo CSV
 
 ```csv
-funcionario_id,mes_referencia,meta_dia,meta_mes,valor_peca,producao_realizada,faturamento_mensal
-1,2026-06,100,3000,1500,2500,3750000
-2,2026-06,120,3600,2000,3000,6000000
+funcionario_id,mes_referencia,meta_dia,meta_mes,valor_peca,producao_realizada,faturamento_mensal,dias_trabalhados,eficiencia,producao_percentual,saldo,eficiencia_acumulada
+1,2026-06,750,16500,100,15016,1501600,22,2003,91,1484,91
+2,2026-06,800,24000,120,18000,2160000,22,2250,75,6000,75
 ```
 
 ### Observações Importantes
 
-- **funcionario_id**: Deve corresponder a um funcionário cadastrado no sistema
-- **meta_mes**: Geralmente é meta_dia × 30 dias
-- **valor_peca**: Em CENTAVOS (1500 = R$ 15,00 por peça)
+- **funcionario_id**: Deve corresponder a um funcionário cadastrado no sistema (obtido do cadastro de funcionários)
+- **meta_mes**: Geralmente é meta_dia × dias_trabalhados
+- **valor_peca**: Em CENTAVOS (100 = R$ 1,00 por peça)
 - **faturamento_mensal**: Em CENTAVOS (producao_realizada × valor_peca)
+- **eficiencia**: Calculada como (producao_realizada / meta_dia) × 100
+- **producao_percentual**: Percentual da meta mensal alcançada
+- **saldo**: Diferença entre produção realizada e meta (pode ser negativo)
+- **eficiencia_acumulada**: Eficiência média acumulada no mês
 
 ---
 

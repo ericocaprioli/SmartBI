@@ -299,6 +299,37 @@ export const producao = sqliteTable("producao", {
    */
   faturamento_mensal: integer("faturamento_mensal").default(0),
   
+  /**
+   * Dias trabalhados no mês
+   * Padrão: 0
+   */
+  dias_trabalhados: integer("dias_trabalhados").default(0),
+  
+  /**
+   * Eficiência diária (realizado / meta_dia * 100)
+   * Padrão: 0
+   */
+  eficiencia: integer("eficiencia").default(0),
+  
+  /**
+   * Percentual de produção acumulada
+   * Padrão: 0
+   */
+  producao_percentual: integer("producao_percentual").default(0),
+  
+  /**
+   * Saldo de produção (realizado - meta)
+   * Pode ser negativo
+   * Padrão: 0
+   */
+  saldo: integer("saldo").default(0),
+  
+  /**
+   * Eficiência acumulada no mês
+   * Padrão: 0
+   */
+  eficiencia_acumulada: integer("eficiencia_acumulada").default(0),
+  
   /** Timestamp de criação do registro */
   criado_em: integer("criado_em", { mode: "timestamp" }).defaultNow().notNull(),
   
