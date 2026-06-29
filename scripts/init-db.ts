@@ -73,8 +73,48 @@ function createTables(db: any) {
       funcao TEXT NOT NULL,
       situacao TEXT NOT NULL,
       forma_pagamento TEXT NOT NULL,
+      tipo_chave_pix TEXT,
       pix TEXT,
+      banco TEXT,
+      agencia TEXT,
+      conta TEXT,
       salario_base INTEGER NOT NULL,
+      data_admissao TEXT,
+      data_demissao TEXT,
+      ativo INTEGER DEFAULT 1 NOT NULL,
+      criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    )
+  `);
+
+  // Cria tabela de funções (cargos)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS funcoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL UNIQUE,
+      ativo INTEGER DEFAULT 1 NOT NULL,
+      criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    )
+  `);
+
+  // Cria tabela de situações contratuais
+  db.run(`
+    CREATE TABLE IF NOT EXISTS situacoes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL UNIQUE,
+      ativo INTEGER DEFAULT 1 NOT NULL,
+      criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    )
+  `);
+
+  // Cria tabela de formas de pagamento
+  db.run(`
+    CREATE TABLE IF NOT EXISTS formas_pagamento (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL UNIQUE,
+      tipo TEXT NOT NULL,
       ativo INTEGER DEFAULT 1 NOT NULL,
       criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
@@ -97,6 +137,12 @@ function createTables(db: any) {
       hora_extra INTEGER DEFAULT 0,
       inss INTEGER DEFAULT 0,
       desconto_diversos INTEGER DEFAULT 0,
+      vale_transporte INTEGER DEFAULT 0,
+      irrf INTEGER DEFAULT 0,
+      fgts INTEGER DEFAULT 0,
+      total_proventos INTEGER DEFAULT 0,
+      total_descontos INTEGER DEFAULT 0,
+      salario_total INTEGER DEFAULT 0,
       salario_liquido INTEGER,
       ferias INTEGER DEFAULT 0,
       terco_ferias INTEGER DEFAULT 0,
@@ -112,15 +158,13 @@ function createTables(db: any) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       funcionario_id INTEGER NOT NULL REFERENCES funcionarios(id),
       mes_referencia TEXT NOT NULL,
+      dias_trabalhados INTEGER DEFAULT 1,
+      dia INTEGER DEFAULT 0,
       meta_dia INTEGER,
-      meta_mes INTEGER,
-      valor_peca INTEGER,
-      producao_realizada INTEGER DEFAULT 0,
-      faturamento_mensal INTEGER DEFAULT 0,
-      dias_trabalhados INTEGER DEFAULT 0,
+      producao_dia INTEGER DEFAULT 0,
       eficiencia INTEGER DEFAULT 0,
-      producao_percentual INTEGER DEFAULT 0,
-      saldo INTEGER DEFAULT 0,
+      producao_acumulada INTEGER DEFAULT 0,
+      saldo_acumulado INTEGER DEFAULT 0,
       eficiencia_acumulada INTEGER DEFAULT 0,
       criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
@@ -140,6 +184,20 @@ function createTables(db: any) {
       variacao INTEGER DEFAULT 0,
       fonte TEXT,
       coletado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+    )
+  `);
+
+  // Cria tabela de meses
+  db.run(`
+    CREATE TABLE IF NOT EXISTS meses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      mes_referencia TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      ativo INTEGER DEFAULT 1 NOT NULL,
+      status TEXT DEFAULT 'planejado' NOT NULL,
+      observacoes TEXT,
+      criado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      atualizado_em INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
     )
   `);
 

@@ -32,7 +32,7 @@ import { getLoginUrl, isAuthConfigured } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 
 // Importações de ícones Lucide React para a interface
-import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Factory, BarChart3, CalendarDays, TrendingUp } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, DollarSign, Factory, BarChart3, CalendarDays, TrendingUp, Calendar, Briefcase, ClipboardList, CreditCard } from "lucide-react";
 
 // Importações de React para gerenciamento de estado e efeitos
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -50,13 +50,17 @@ import { Button } from "./ui/button";
 // Cada item contém: ícone, label (texto exibido) e caminho da rota
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Users, label: "Funcionários", path: "/funcionarios" },
+  { icon: Users, label: "Cadastro de Funcionário", path: "/funcionarios" },
   { icon: DollarSign, label: "Pagamentos", path: "/pagamentos" },
   { icon: Factory, label: "Produção", path: "/producao" },
   { icon: BarChart3, label: "Dashboard Produção", path: "/dashboard-producao" },
   { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
   { icon: CalendarDays, label: "Visão Anual", path: "/visao-anual" },
   { icon: TrendingUp, label: "Cotações", path: "/cotacoes" },
+  { icon: Calendar, label: "Cadastro de Meses/Anos", path: "/admin-meses" },
+  { icon: Briefcase, label: "Cadastro de Funções", path: "/admin-funcoes" },
+  { icon: ClipboardList, label: "Cadastro de Situações", path: "/admin-situacoes" },
+  { icon: CreditCard, label: "Formas de Pagamento", path: "/admin-formas-pagamento" },
 ];
 
 // Constantes para gerenciamento da largura da sidebar

@@ -29,6 +29,10 @@ import DashboardProducao from "./pages/DashboardProducao";
 import Relatorios from "./pages/Relatorios";
 import VisaoAnual from "./pages/VisaoAnual";
 import Cotacoes from "./pages/Cotacoes";
+import AdminMeses from "./pages/AdminMeses";
+import AdminFuncoes from "./pages/AdminFuncoes";
+import AdminSituacoes from "./pages/AdminSituacoes";
+import AdminFormasPagamento from "./pages/AdminFormasPagamento";
 
 /**
  * Router define as rotas da aplicação usando Wouter
@@ -57,6 +61,10 @@ function Router() {
       <Route path={"/relatorios"} component={Relatorios} />
       <Route path={"/visao-anual"} component={VisaoAnual} />
       <Route path={"/cotacoes"} component={Cotacoes} />
+      <Route path={"/admin-meses"} component={AdminMeses} />
+      <Route path={"/admin-funcoes"} component={AdminFuncoes} />
+      <Route path={"/admin-situacoes"} component={AdminSituacoes} />
+      <Route path={"/admin-formas-pagamento"} component={AdminFormasPagamento} />
       
       {/* Rota 404 explícita */}
       <Route path={"/404"} component={NotFound} />

@@ -24,6 +24,7 @@ import {
   getPagamentoByFuncionarioAndMes,
   createPagamento,
   updatePagamento,
+  deletePagamento,
   getProducaoByMes,
   getProducaoByFuncionarioAndMes,
   createProducao,
@@ -34,6 +35,22 @@ import {
   importProducaoCSV,
   getLatestCotacoes,
   getCotacoesByTipo,
+  getMeses,
+  createMes,
+  updateMes,
+  deleteMes,
+  getFuncoes,
+  createFuncao,
+  updateFuncao,
+  deleteFuncao,
+  getSituacoes,
+  createSituacao,
+  updateSituacao,
+  deleteSituacao,
+  getFormasPagamento,
+  createFormaPagamento,
+  updateFormaPagamento,
+  deleteFormaPagamento,
 } from "./db";
 
 // Importação de schemas do Drizzle para tabelas
@@ -115,10 +132,16 @@ export const appRouter = router({
         z.object({
           nome: z.string(),
           funcao: z.string(),
-          situacao: z.enum(["CLT", "Contrato", "Experiência"]),
+          situacao: z.string(),
           forma_pagamento: z.string(),
+          tipo_chave_pix: z.string().optional(),
           pix: z.string().optional(),
+          banco: z.string().optional(),
+          agencia: z.string().optional(),
+          conta: z.string().optional(),
           salario_base: z.number(),
+          data_admissao: z.string().optional(),
+          data_demissao: z.string().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -136,10 +159,16 @@ export const appRouter = router({
           id: z.number(),
           nome: z.string().optional(),
           funcao: z.string().optional(),
-          situacao: z.enum(["CLT", "Contrato", "Experiência"]).optional(),
+          situacao: z.string().optional(),
           forma_pagamento: z.string().optional(),
+          tipo_chave_pix: z.string().optional(),
           pix: z.string().optional(),
+          banco: z.string().optional(),
+          agencia: z.string().optional(),
+          conta: z.string().optional(),
           salario_base: z.number().optional(),
+          data_admissao: z.string().optional(),
+          data_demissao: z.string().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -227,6 +256,12 @@ export const appRouter = router({
           hora_extra: z.number().optional(),
           inss: z.number().optional(),
           desconto_diversos: z.number().optional(),
+          vale_transporte: z.number().optional(),
+          irrf: z.number().optional(),
+          fgts: z.number().optional(),
+          total_proventos: z.number().optional(),
+          total_descontos: z.number().optional(),
+          salario_total: z.number().optional(),
           salario_liquido: z.number().optional(),
           ferias: z.number().optional(),
           terco_ferias: z.number().optional(),
@@ -256,6 +291,12 @@ export const appRouter = router({
           hora_extra: z.number().optional(),
           inss: z.number().optional(),
           desconto_diversos: z.number().optional(),
+          vale_transporte: z.number().optional(),
+          irrf: z.number().optional(),
+          fgts: z.number().optional(),
+          total_proventos: z.number().optional(),
+          total_descontos: z.number().optional(),
+          salario_total: z.number().optional(),
           salario_liquido: z.number().optional(),
           ferias: z.number().optional(),
           terco_ferias: z.number().optional(),
@@ -276,6 +317,17 @@ export const appRouter = router({
       .input(z.object({ csvContent: z.string() }))
       .mutation(async ({ input }) => {
         return await importPagamentosCSV(input.csvContent);
+      }),
+    
+    /**
+     * Exclui um pagamento
+     * @param input - ID do pagamento
+     * @returns Pagamento excluído
+     */
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deletePagamento(input.id);
       }),
   }),
 
@@ -326,11 +378,13 @@ export const appRouter = router({
         z.object({
           funcionario_id: z.number(),
           mes_referencia: z.string(),
+          dia: z.number().optional(),
           meta_dia: z.number().optional(),
-          meta_mes: z.number().optional(),
-          valor_peca: z.number().optional(),
-          producao_realizada: z.number().optional(),
-          faturamento_mensal: z.number().optional(),
+          producao_dia: z.number().optional(),
+          eficiencia: z.number().optional(),
+          producao_acumulada: z.number().optional(),
+          saldo_acumulado: z.number().optional(),
+          eficiencia_acumulada: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -346,11 +400,13 @@ export const appRouter = router({
       .input(
         z.object({
           id: z.number(),
+          dia: z.number().optional(),
           meta_dia: z.number().optional(),
-          meta_mes: z.number().optional(),
-          valor_peca: z.number().optional(),
-          producao_realizada: z.number().optional(),
-          faturamento_mensal: z.number().optional(),
+          producao_dia: z.number().optional(),
+          eficiencia: z.number().optional(),
+          producao_acumulada: z.number().optional(),
+          saldo_acumulado: z.number().optional(),
+          eficiencia_acumulada: z.number().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -411,6 +467,167 @@ export const appRouter = router({
     refresh: publicProcedure.mutation(async () => {
       return await collectCotacoes();
     }),
+  }),
+
+  // Rotas de meses
+  meses: router({
+    /**
+     * Lista todos os meses ativos
+     * @returns Array de meses ativos ordenados por mes_referencia
+     */
+    list: publicProcedure.query(async () => {
+      return await getMeses();
+    }),
+
+    /**
+     * Cria um novo mês
+     * @param input - Dados do mês (mes_referencia, label, status, observacoes)
+     * @returns Mês criado
+     */
+    create: publicProcedure
+      .input(
+        z.object({
+          mes_referencia: z.string(),
+          label: z.string(),
+          status: z.enum(["planejado", "em_andamento", "concluido"]).optional(),
+          observacoes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await createMes(input);
+      }),
+
+    /**
+     * Atualiza um mês existente
+     * @param input - ID do mês e dados a atualizar (todos opcionais exceto ID)
+     * @returns Mês atualizado
+     */
+    update: publicProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          label: z.string().optional(),
+          ativo: z.number().optional(),
+          status: z.enum(["planejado", "em_andamento", "concluido"]).optional(),
+          observacoes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateMes(id, data);
+      }),
+
+    /**
+     * Exclui um mês por ID
+     * @param input - ID do mês
+     * @returns Mês excluído
+     */
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteMes(input.id);
+      }),
+  }),
+
+  // Rotas de funções (cargos)
+  funcoes: router({
+    /** Lista todas as funções ativas */
+    list: publicProcedure.query(async () => {
+      return await getFuncoes();
+    }),
+
+    /** Cria uma nova função */
+    create: publicProcedure
+      .input(z.object({ nome: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        return await createFuncao(input);
+      }),
+
+    /** Atualiza uma função existente */
+    update: publicProcedure
+      .input(z.object({ id: z.number(), nome: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateFuncao(id, data);
+      }),
+
+    /** Exclui uma função por ID */
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteFuncao(input.id);
+      }),
+  }),
+
+  // Rotas de situações contratuais
+  situacoes: router({
+    /** Lista todas as situações ativas */
+    list: publicProcedure.query(async () => {
+      return await getSituacoes();
+    }),
+
+    /** Cria uma nova situação */
+    create: publicProcedure
+      .input(z.object({ nome: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        return await createSituacao(input);
+      }),
+
+    /** Atualiza uma situação existente */
+    update: publicProcedure
+      .input(z.object({ id: z.number(), nome: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateSituacao(id, data);
+      }),
+
+    /** Exclui uma situação por ID */
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteSituacao(input.id);
+      }),
+  }),
+
+  // Rotas de formas de pagamento
+  formasPagamento: router({
+    /** Lista todas as formas de pagamento ativas */
+    list: publicProcedure.query(async () => {
+      return await getFormasPagamento();
+    }),
+
+    /** Cria uma nova forma de pagamento */
+    create: publicProcedure
+      .input(
+        z.object({
+          nome: z.string().min(1),
+          tipo: z.enum(["pix", "conta", "dinheiro"]),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await createFormaPagamento(input);
+      }),
+
+    /** Atualiza uma forma de pagamento existente */
+    update: publicProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          nome: z.string().min(1).optional(),
+          tipo: z.enum(["pix", "conta", "dinheiro"]).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        return await updateFormaPagamento(id, data);
+      }),
+
+    /** Exclui uma forma de pagamento por ID */
+    delete: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteFormaPagamento(input.id);
+      }),
   }),
 });
 

@@ -8,7 +8,7 @@ import { drizzle } from "drizzle-orm/sql-js";
 import initSqlJs from 'sql.js';
 
 // Importação de schemas e tipos do Drizzle
-import { InsertUser, users, funcionarios, InsertFuncionario, pagamentos, InsertPagamento, producao, InsertProducao, cotacoes, InsertCotacao } from "../drizzle/schema";
+import { InsertUser, users, funcionarios, InsertFuncionario, pagamentos, InsertPagamento, producao, InsertProducao, cotacoes, InsertCotacao, meses, InsertMes, funcoes, InsertFuncao, situacoes, InsertSituacao, formas_pagamento, InsertFormaPagamento } from "../drizzle/schema";
 
 // Importação de variáveis de ambiente
 import { ENV } from './_core/env';
@@ -189,8 +189,8 @@ export async function getUserByOpenId(openId: string) {
 export async function getFuncionarios() {
   const db = await getDb();
   if (!db) return [];
-  // Filtra apenas funcionários ativos (ativo=1)
-  return await db.select().from(funcionarios).where(eq(funcionarios.ativo, 1));
+  // Retorna todos os funcionários (filtro de ativo removido temporariamente)
+  return await db.select().from(funcionarios);
 }
 
 /**
@@ -231,7 +231,9 @@ export async function createFuncionario(data: InsertFuncionario) {
 export async function updateFuncionario(id: number, data: Partial<InsertFuncionario>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return await db.update(funcionarios).set(data).where(eq(funcionarios.id, id));
+  const result = await db.update(funcionarios).set(data).where(eq(funcionarios.id, id));
+  await saveDb();
+  return result;
 }
 
 /**
@@ -309,6 +311,18 @@ export async function updatePagamento(id: number, data: Partial<InsertPagamento>
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return await db.update(pagamentos).set(data).where(eq(pagamentos.id, id));
+}
+
+/**
+ * deletePagamento exclui um pagamento por ID
+ * 
+ * @param id - ID do pagamento
+ * @returns Pagamento excluído
+ */
+export async function deletePagamento(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(pagamentos).where(eq(pagamentos.id, id));
 }
 
 // ==================== PRODUÇÃO ====================
@@ -394,8 +408,8 @@ export async function getKPIsDashboard(mes: string) {
   // Busca funcionários ativos
   const funcionariosAtivos = await db.select().from(funcionarios).where(eq(funcionarios.ativo, 1));
   
-  // Calcula total de salários líquidos
-  const totalSalarios = pagamentosMes.reduce((sum, p) => sum + (p.salario_liquido || 0), 0);
+  // Calcula total de salários base (usando salario_base_mes que tem valor)
+  const totalSalarios = pagamentosMes.reduce((sum, p) => sum + (p.salario_base_mes || 0), 0);
   
   // Calcula total de descontos (INSS + descontos diversos)
   const totalDescontos = pagamentosMes.reduce((sum, p) => sum + ((p.inss || 0) + (p.desconto_diversos || 0)), 0);
@@ -597,7 +611,14 @@ export async function importProducaoCSV(csvContent: string) {
 export async function insertCotacao(data: InsertCotacao) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(cotacoes).values(data);
+  // Define explicitamente coletado_em como Date atual.
+  // Com mode: "timestamp", o Drizzle converte para segundos (Unix) corretamente.
+  // Isso evita o bug do defaultNow() que armazena milissegundos, gerando datas
+  // incorretas (ex: ano 58463) ao serem lidas de volta.
+  const result = await db.insert(cotacoes).values({
+    ...data,
+    coletado_em: new Date(),
+  });
   return result;
 }
 
@@ -665,4 +686,278 @@ export async function getUltimaCotacaoPorTipo(tipo: "dolar" | "algodao" | "diese
     .orderBy(desc(cotacoes.coletado_em))
     .limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// ==================== MESES ====================
+
+/**
+ * getMeses lista todos os meses ativos
+ * 
+ * @returns Array de meses ativos ordenados por mes_referencia
+ */
+export async function getMeses() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(meses).where(eq(meses.ativo, 1)).orderBy(meses.mes_referencia);
+}
+
+/**
+ * getMesById busca um mês por ID
+ * 
+ * @param id - ID do mês
+ * @returns Mês encontrado ou undefined
+ */
+export async function getMesById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(meses).where(eq(meses.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * createMes cria um novo mês
+ * 
+ * @param data - Dados do mês
+ * @returns Resultado da inserção
+ */
+export async function createMes(data: InsertMes) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(meses).values(data);
+  await saveDb();
+  return result;
+}
+
+/**
+ * updateMes atualiza um mês existente
+ * 
+ * @param id - ID do mês
+ * @param data - Dados a atualizar (parcial)
+ * @returns Resultado da atualização
+ */
+export async function updateMes(id: number, data: Partial<InsertMes>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(meses).set(data).where(eq(meses.id, id));
+  await saveDb();
+  return result;
+}
+
+/**
+ * deleteMes exclui um mês por ID
+ * 
+ * @param id - ID do mês
+ * @returns Mês excluído
+ * @throws Error se houver produção ou pagamentos cadastrados para o mês
+ */
+export async function deleteMes(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Busca o mês para obter mes_referencia
+  const mes = await getMesById(id);
+  if (!mes) {
+    throw new Error("Mês não encontrado");
+  }
+
+  // Verifica se há pagamentos para este mês
+  const pagamentosMes = await getPagamentosByMes(mes.mes_referencia);
+  if (pagamentosMes.length > 0) {
+    throw new Error("Não é possível excluir este mês pois existem pagamentos cadastrados");
+  }
+
+  // Verifica se há produção para este mês
+  const producaoMes = await getProducaoByMes(mes.mes_referencia);
+  if (producaoMes.length > 0) {
+    throw new Error("Não é possível excluir este mês pois existem dados de produção cadastrados");
+  }
+
+  return await db.delete(meses).where(eq(meses.id, id));
+}
+
+// ==================== FUNÇÕES (CARGOS) ====================
+
+/**
+ * getFuncoes lista todas as funções ativas
+ * @returns Array de funções ativas ordenadas por nome
+ */
+export async function getFuncoes() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(funcoes).where(eq(funcoes.ativo, 1)).orderBy(funcoes.nome);
+}
+
+/**
+ * createFuncao cria uma nova função
+ * @param data - Dados da função (nome)
+ * @returns Resultado da inserção
+ */
+export async function createFuncao(data: InsertFuncao) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(funcoes).values(data);
+  await saveDb();
+  return result;
+}
+
+/**
+ * updateFuncao atualiza uma função existente
+ * @param id - ID da função
+ * @param data - Dados a atualizar (parcial)
+ * @returns Resultado da atualização
+ */
+export async function updateFuncao(id: number, data: Partial<InsertFuncao>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(funcoes).set(data).where(eq(funcoes.id, id));
+  await saveDb();
+  return result;
+}
+
+/**
+ * deleteFuncao exclui uma função por ID
+ * @param id - ID da função
+ * @returns Resultado da exclusão
+ * @throws Error se a função estiver em uso por algum funcionário
+ */
+export async function deleteFuncao(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const funcao = await db.select().from(funcoes).where(eq(funcoes.id, id)).limit(1);
+  if (funcao.length === 0) throw new Error("Função não encontrada");
+
+  // Verifica se há funcionários usando esta função
+  const emUso = await db.select().from(funcionarios).where(eq(funcionarios.funcao, funcao[0].nome)).limit(1);
+  if (emUso.length > 0) {
+    throw new Error("Não é possível excluir esta função pois existem funcionários cadastrados com ela");
+  }
+
+  const result = await db.delete(funcoes).where(eq(funcoes.id, id));
+  await saveDb();
+  return result;
+}
+
+// ==================== SITUAÇÕES ====================
+
+/**
+ * getSituacoes lista todas as situações ativas
+ * @returns Array de situações ativas ordenadas por nome
+ */
+export async function getSituacoes() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(situacoes).where(eq(situacoes.ativo, 1)).orderBy(situacoes.nome);
+}
+
+/**
+ * createSituacao cria uma nova situação
+ * @param data - Dados da situação (nome)
+ * @returns Resultado da inserção
+ */
+export async function createSituacao(data: InsertSituacao) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(situacoes).values(data);
+  await saveDb();
+  return result;
+}
+
+/**
+ * updateSituacao atualiza uma situação existente
+ * @param id - ID da situação
+ * @param data - Dados a atualizar (parcial)
+ * @returns Resultado da atualização
+ */
+export async function updateSituacao(id: number, data: Partial<InsertSituacao>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(situacoes).set(data).where(eq(situacoes.id, id));
+  await saveDb();
+  return result;
+}
+
+/**
+ * deleteSituacao exclui uma situação por ID
+ * @param id - ID da situação
+ * @returns Resultado da exclusão
+ * @throws Error se a situação estiver em uso por algum funcionário
+ */
+export async function deleteSituacao(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const situacao = await db.select().from(situacoes).where(eq(situacoes.id, id)).limit(1);
+  if (situacao.length === 0) throw new Error("Situação não encontrada");
+
+  const emUso = await db.select().from(funcionarios).where(eq(funcionarios.situacao, situacao[0].nome)).limit(1);
+  if (emUso.length > 0) {
+    throw new Error("Não é possível excluir esta situação pois existem funcionários cadastrados com ela");
+  }
+
+  const result = await db.delete(situacoes).where(eq(situacoes.id, id));
+  await saveDb();
+  return result;
+}
+
+// ==================== FORMAS DE PAGAMENTO ====================
+
+/**
+ * getFormasPagamento lista todas as formas de pagamento ativas
+ * @returns Array de formas de pagamento ativas ordenadas por nome
+ */
+export async function getFormasPagamento() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(formas_pagamento).where(eq(formas_pagamento.ativo, 1)).orderBy(formas_pagamento.nome);
+}
+
+/**
+ * createFormaPagamento cria uma nova forma de pagamento
+ * @param data - Dados da forma (nome, tipo)
+ * @returns Resultado da inserção
+ */
+export async function createFormaPagamento(data: InsertFormaPagamento) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(formas_pagamento).values(data);
+  await saveDb();
+  return result;
+}
+
+/**
+ * updateFormaPagamento atualiza uma forma de pagamento existente
+ * @param id - ID da forma de pagamento
+ * @param data - Dados a atualizar (parcial)
+ * @returns Resultado da atualização
+ */
+export async function updateFormaPagamento(id: number, data: Partial<InsertFormaPagamento>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.update(formas_pagamento).set(data).where(eq(formas_pagamento.id, id));
+  await saveDb();
+  return result;
+}
+
+/**
+ * deleteFormaPagamento exclui uma forma de pagamento por ID
+ * @param id - ID da forma de pagamento
+ * @returns Resultado da exclusão
+ * @throws Error se a forma estiver em uso por algum funcionário
+ */
+export async function deleteFormaPagamento(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const forma = await db.select().from(formas_pagamento).where(eq(formas_pagamento.id, id)).limit(1);
+  if (forma.length === 0) throw new Error("Forma de pagamento não encontrada");
+
+  const emUso = await db.select().from(funcionarios).where(eq(funcionarios.forma_pagamento, forma[0].nome)).limit(1);
+  if (emUso.length > 0) {
+    throw new Error("Não é possível excluir esta forma de pagamento pois existem funcionários cadastrados com ela");
+  }
+
+  const result = await db.delete(formas_pagamento).where(eq(formas_pagamento.id, id));
+  await saveDb();
+  return result;
 }
